@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: shakha-donat-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ADMIN_TELEGRAM_ID
+        value: "8465117749"
+      - key: ALLOWED_ORIGINS
+        value: https://shahromak.github.io
