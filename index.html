@@ -82,6 +82,7 @@ body{background:#0d121d;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
 nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:#0d1421;border-top:1px solid #2a354c;padding:5px max(8px,calc((100vw - 780px)/2)) calc(5px + env(safe-area-inset-bottom))}
 .store-nav button,.store-nav a{display:grid;place-content:center;gap:3px;text-align:center;min-height:54px;background:none;border:0;color:#c0cce0;font-size:12px}.store-nav span{font-size:21px;color:#78adff;line-height:1}
 @media(max-width:560px){.hero{min-height:350px}.art{height:170px}.hero h1{font-size:36px}}
+.payment-methods{border:0;padding:0;margin:18px 0;min-width:0}.payment-methods legend{font-weight:800;font-size:18px;margin-bottom:6px}.payment-methods .pay-card{display:grid;grid-template-columns:42px minmax(0,1fr) 20px;align-items:center;gap:11px;border:1px solid #2a354c;border-radius:15px;padding:11px;margin:8px 0;background:#141c2b;cursor:pointer}.pay-card:has(input:checked){border-color:#599bff;box-shadow:inset 0 0 0 1px #599bff}.pay-icon{display:grid;place-items:center;height:42px;border-radius:11px;background:#17375c;color:#a9d7ff;font-weight:850}.pay-card small{display:block;color:var(--dim);margin-top:4px}.pay-card input{accent-color:#599bff;width:18px;height:18px;margin:0}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -122,7 +123,7 @@ nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template
 <a href="#profile"><span aria-hidden="true">◎</span>Профиль</a>
 </nav>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="button" id="add-cart">В корзину</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend>Способ оплаты</legend><label class="pay-card"><span class="pay-icon" aria-hidden="true">A</span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true">DC</span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true">Э</span><span><b>Эсхата</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="eskhata"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true">↗</span><span><b>Другой банк</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">Реквизиты появятся после подтверждения цены. Оператор проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="button" id="add-cart">В корзину</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
@@ -214,6 +215,8 @@ function renderPackages(product) {
   }));
   update();
 }
+const paymentNames = {"alif":"Алиф","dc":"Душанбе Сити","eskhata":"Эсхата","other":"Другой банк"};
+const selectedPaymentMethod = () => $('#form').elements.paymentMethod.value;
 function openProduct(product, draft) {
   selectedProduct = product;
   editingDraft = draft;
@@ -228,6 +231,7 @@ function openProduct(product, draft) {
   $('#account').placeholder = product[4] === 'telegram' ? '@username' : isSteam ? 'Логин аккаунта' : 'ID игрока';
   if (draft) {
     $('#account').value = draft.account;
+    if (Object.hasOwn(paymentNames, draft.paymentMethod)) $('#form').elements.paymentMethod.value = draft.paymentMethod;
     if (product[5].includes(draft.pack)) $('#package').value = draft.pack;
     if (isSteam && draft.amount) $('#amount').value = draft.amount;
   }
@@ -291,7 +295,8 @@ $('#form').onsubmit = event => {
     product: selectedProduct[0],
     pack: $('#package').value,
     account,
-    amount
+    amount,
+    paymentMethod: selectedPaymentMethod()
   };
   const next = editingDraft ? drafts.map(item => item === editingDraft ? draft : item) : [draft, ...drafts];
   if (!saveDrafts(next)) {
@@ -376,7 +381,7 @@ async function api(path, body) {
 let pending;
 $('#submit-order').onclick = async () => {
   if (!$('#form').reportValidity()) return;
-  const order = {product:selectedProduct[0], pack:$('#package').value, account:$('#account').value.trim(), amount:$('#amount').disabled ? null : Number($('#amount').value)};
+  const order = {paymentMethod:selectedPaymentMethod(), product:selectedProduct[0], pack:$('#package').value, account:$('#account').value.trim(), amount:$('#amount').disabled ? null : Number($('#amount').value)};
   const key = JSON.stringify(order);
   if (pending?.key !== key) pending = {key, id:crypto.randomUUID()};
   const button = $('#submit-order');
@@ -410,7 +415,7 @@ function orderRow(order, paymentDetails, admin) {
   title.textContent = order.product + ' · ' + (order.amount ? order.amount + ' TJS' : order.package);
   const detail = document.createElement('p');
   detail.className = 'note';
-  detail.textContent = [labels[order.status], new Date(order.created_at).toLocaleString('ru'), order.account, order.id, order.price_minor != null ? (order.price_minor / 100).toFixed(2) + ' TJS' : '', order.payment_reference, admin ? order.customer_id : ''].filter(Boolean).join(' · ');
+  detail.textContent = [labels[order.status], new Date(order.created_at).toLocaleString('ru'), order.account, paymentNames[order.payment_method], order.id, order.price_minor != null ? (order.price_minor / 100).toFixed(2) + ' TJS' : '', order.payment_reference, admin ? order.customer_id : ''].filter(Boolean).join(' · ');
   const actions = document.createElement('div');
   actions.className = 'draft-actions';
   row.append(title, detail, actions);
@@ -511,7 +516,7 @@ function renderCart() {
     title.textContent = item.product + ' · ' + (item.amount ? item.amount + ' TJS' : item.pack);
     const account = document.createElement('span');
     account.className = 'note';
-    account.textContent = item.account;
+    account.textContent = [item.account, paymentNames[item.paymentMethod]].filter(Boolean).join(' · ');
     const remove = document.createElement('button');
     remove.textContent = 'Удалить';
     remove.disabled = sendingCart;
@@ -538,7 +543,7 @@ $('#add-cart').onclick = () => {
   try {
     saveCart([...cart, {
       id:crypto.randomUUID(), product:selectedProduct[0], pack:$('#package').value,
-      account, amount:$('#amount').disabled ? null : Number($('#amount').value)
+      account, paymentMethod:selectedPaymentMethod(), amount:$('#amount').disabled ? null : Number($('#amount').value)
     }]);
   } catch {
     $('#result').textContent = 'Не удалось сохранить товар в корзине.';
