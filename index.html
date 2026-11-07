@@ -85,6 +85,13 @@ nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template
 .payment-methods{border:0;padding:0;margin:18px 0;min-width:0}.payment-methods legend{font-weight:800;font-size:18px;margin-bottom:6px}.payment-methods .pay-card{display:grid;grid-template-columns:42px minmax(0,1fr) 20px;align-items:center;gap:11px;border:1px solid #2a354c;border-radius:15px;padding:11px;margin:8px 0;background:#141c2b;cursor:pointer}.pay-card:has(input:checked){border-color:#599bff;box-shadow:inset 0 0 0 1px #599bff}.pay-icon{display:grid;place-items:center;height:42px;border-radius:11px;background:#17375c;color:#a9d7ff;font-weight:850}.pay-card small{display:block;color:var(--dim);margin-top:4px}.pay-card input{accent-color:#599bff;width:18px;height:18px;margin:0}
 .ui-icon{display:block;flex:none}.store-nav .ui-icon{margin:auto;color:#83b6ff}.store-nav a:hover,.store-nav button:hover{color:#fff}.featured i .ui-icon{width:19px;height:19px}#open-cart{display:inline-flex;align-items:center;gap:5px}#open-cart .ui-icon{width:15px;height:15px}
 .payment-methods .pay-card{grid-template-columns:46px minmax(0,1fr) 22px;gap:12px;padding:12px;background:#151e2f;transition:border-color .16s,background-color .16s}.pay-card:has(input:checked){background:#172842;border-color:#63a0ff}.pay-icon{height:46px;color:#86d9ff;background:#123349}.pay-card:has([value=alif]) .pay-icon{color:#a8f7d3;background:linear-gradient(145deg,#1b6954,#153b35)}.pay-card:has([value=dc]) .pay-icon{color:#a6d8ff;background:linear-gradient(145deg,#265487,#173150)}.pay-card input{appearance:none;-webkit-appearance:none;display:grid;place-content:center;width:21px;height:21px;padding:0;border:2px solid #75849e;border-radius:50%;background:transparent}.pay-card input:checked{border-color:#78adff}.pay-card input:checked::before{content:'';width:9px;height:9px;background:#78adff;border-radius:50%}.pay-card input:focus-visible{outline:2px solid #a8cbff;outline-offset:3px}.checkout-secondary{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:9px}.checkout-secondary button{min-height:44px;padding:8px 6px;font-size:13px}
+
+#profile{scroll-margin-top:18px;background:none;border:0;padding:0;margin:34px 0 20px}
+#profile h2{margin-bottom:15px}.profile-card{display:grid;grid-template-columns:64px minmax(0,1fr);align-items:center;gap:15px;padding:18px;border-radius:19px;border:1px solid #35547a;background:radial-gradient(ellipse at 90% 0,#1b4968,transparent 75%),#142137}
+.profile-avatar{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;overflow:hidden;background:linear-gradient(140deg,#539dff,#295bd8);color:white;font-size:24px;font-weight:800}.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-card h3{margin:0 0 4px;font-size:20px;overflow-wrap:anywhere}.profile-card p{margin:0;overflow-wrap:anywhere}
+.profile-id{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #ffffff22;padding-top:13px}.profile-id[hidden]{display:none}.profile-id button{padding:6px 9px;font-size:12px}
+.profile-links{display:grid;gap:8px;margin:12px 0}.profile-links button,.profile-links a{display:grid;grid-template-columns:35px 1fr auto;align-items:center;gap:10px;width:100%;padding:12px;text-align:left;background:#141c2b;border:1px solid #2a354c;border-radius:13px}.profile-links small{display:block;color:var(--dim);margin-top:3px}.profile-link-icon{color:#83b6ff;display:grid;place-items:center;background:#203450;border-radius:9px;height:35px}.profile-link-icon svg{width:20px;height:20px}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -107,13 +114,23 @@ nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template
 </section>
 <section id="catalog"><div class="heading"><h2>Каталог пополнений</h2><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button></div><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p></section>
 <section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.</p></section>
-<section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
+<section class="faq" id="shop-faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
 <details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.</p></details>
-</section><section class="how" id="profile" aria-label="Аккаунт Telegram">
-<h2>Аккаунт Telegram</h2>
-<p id="telegram-status" class="note" role="status">Открой магазин через Mini App бота @ShakhaDonatBot для входа.</p>
+</section><section id="profile" aria-labelledby="profile-title">
+<h2 id="profile-title">Профиль</h2>
+<div class="profile-card">
+<div id="profile-avatar" class="profile-avatar" aria-hidden="true">TG</div>
+<div><h3 id="profile-name">Аккаунт Telegram</h3><p id="profile-handle" class="note">Вход через Mini App</p></div>
+<div class="profile-id" id="profile-id-row" hidden><span>Telegram ID <b id="profile-id"></b></span><button id="copy-profile-id">Копировать</button></div>
+</div>
+<div class="profile-links">
+<button id="profile-orders"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6m-6 4h6"/></svg></span><span><b>Мои заказы</b><small>История заявок и их статусы</small></span><span aria-hidden="true">›</span></button>
+<button id="profile-cart"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg></span><span><b>Корзина</b><small>Товары, которые ты выбрал</small></span><span aria-hidden="true">›</span></button>
+<a href="#shop-faq"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm-3-13a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></svg></span><span><b>Частые вопросы</b><small>Как оформить и оплатить заказ</small></span><span aria-hidden="true">›</span></a>
+</div>
+<p id="telegram-status" class="note" role="status">Открой магазин через @ShakhaDonatBot для входа.</p>
 <button id="telegram-login">Проверить Telegram-вход</button>
 <button id="admin-orders" hidden>Управление заказами</button>
 </section>
@@ -476,6 +493,41 @@ $('#admin-orders').onclick = () => {
   $('#admin-dialog').showModal();
   loadOrders(true);
 };
+function renderProfile(user) {
+  let verifiedData;
+  try {
+    const data = JSON.parse(new URLSearchParams(telegram.initData).get('user'));
+    if (String(data?.id) === String(user.id)) verifiedData = data;
+  } catch {}
+  const name = [user.first_name, verifiedData?.last_name].filter(Boolean).join(' ') || user.username || 'Аккаунт Telegram';
+  $('#profile-name').textContent = name;
+  $('#profile-handle').textContent = user.username ? '@' + user.username : 'Профиль Telegram';
+  $('#profile-id').textContent = String(user.id);
+  $('#profile-id-row').hidden = false;
+  const avatar = $('#profile-avatar');
+  const initials = name.split(/\s+/).slice(0, 2).map(word => Array.from(word)[0]).join('').toUpperCase();
+  avatar.textContent = initials;
+  try {
+    const photo = new URL(verifiedData?.photo_url);
+    if (photo.protocol !== 'https:') return;
+    const image = document.createElement('img');
+    image.alt = '';
+    image.referrerPolicy = 'no-referrer';
+    image.onload = () => avatar.replaceChildren(image);
+    image.src = photo.href;
+  } catch {}
+}
+$('#profile-orders').onclick = () => $('#orders').click();
+$('#profile-cart').onclick = () => $('#open-cart').click();
+$('#copy-profile-id').onclick = async () => {
+  const button = $('#copy-profile-id');
+  try {
+    await navigator.clipboard.writeText($('#profile-id').textContent);
+    button.textContent = 'Скопировано';
+  } catch {
+    button.textContent = 'Выдели ID вручную';
+  }
+};
 async function checkTelegram() {
   const button = $('#telegram-login');
   const loader = $('#auth-loader');
@@ -484,7 +536,9 @@ async function checkTelegram() {
   $('#telegram-status').textContent = 'Входим через Telegram…';
   try {
     const {user, isAdmin} = await api('/me');
-    $('#telegram-status').textContent = 'Telegram подтверждён: ' + (user.first_name || user.username || user.id);
+    renderProfile(user);
+    $('#telegram-status').textContent = '✓ Аккаунт подтверждён через Telegram.';
+    button.hidden = true;
     $('#admin-orders').hidden = !isAdmin;
   } catch (error) {
     $('#telegram-status').textContent = error.message;
