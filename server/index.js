@@ -94,7 +94,7 @@ function orderRoute(handler) {
         package text NOT NULL, account text NOT NULL, amount numeric(9,2),
         status text NOT NULL DEFAULT 'new', price_minor integer,
         payment_reference text, created_at timestamptz NOT NULL DEFAULT now()
-      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
+      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
@@ -105,9 +105,43 @@ function orderRoute(handler) {
   };
 }
 const uuid = /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i;
+async function shopSettings() {
+  const {rows} = await database.query('SELECT data FROM storefront_settings WHERE id=1');
+  return rows[0]?.data || {prices:{}, payments:{}, banner:''};
+}
+function paymentInstructions(settings, method) {
+  return settings.payments?.[method] || process.env.PAYMENT_DETAILS || '';
+}
+app.get('/api/shop/settings', orderRoute(async (_req, res) => {
+  const {prices, banner} = await shopSettings();
+  res.json({prices, banner});
+}));
+app.get('/api/admin/settings', auth, adminOnly, orderRoute(async (_req, res) => {
+  res.json({settings:await shopSettings(), catalog:Object.fromEntries(products), methods:[...paymentMethods]});
+}));
+app.post('/api/admin/settings', auth, adminOnly, orderRoute(async (req, res) => {
+  const {prices, payments, banner} = req.body || {};
+  const record = value => value && typeof value === 'object' && !Array.isArray(value);
+  const validPrices = record(prices) && Object.entries(prices).every(([product, packs]) =>
+    products.has(product) && product !== 'Steam' && record(packs) && Object.entries(packs).every(([pack, minor]) =>
+      products.get(product).includes(pack) && Number.isInteger(minor) && minor > 0 && minor <= 10000000));
+  const validPayments = record(payments) && Object.entries(payments).every(([method, value]) =>
+    paymentMethods.has(method) && typeof value === 'string' && value.length <= 1200);
+  if (!validPrices || !validPayments || typeof banner !== 'string' || banner.length > 300) {
+    return res.status(400).json({error:'Проверь цены, реквизиты и текст баннера'});
+  }
+  await database.query(
+    'INSERT INTO storefront_settings (id,data) VALUES (1,$1::jsonb) ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data',
+    [JSON.stringify({prices,payments,banner:banner.trim()})]
+  );
+  res.json({ok:true});
+}));
 app.get('/api/orders', auth, orderRoute(async (req, res) => {
   const {rows} = await database.query('SELECT ' + fields + ' FROM storefront_orders WHERE customer_id=$1 ORDER BY created_at DESC LIMIT 100', [req.telegramUser.id]);
-  res.json({orders:rows, paymentDetails:process.env.PAYMENT_DETAILS || ''});
+  const settings = await shopSettings();
+  res.json({orders:rows.map(order => ({
+    ...order, paymentDetails:order.status === 'awaiting_payment' ? paymentInstructions(settings, order.payment_method) : ''
+  }))});
 }));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
   const {id, product, pack, account, amount, paymentMethod = null} = req.body || {};
@@ -149,7 +183,7 @@ app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
   if (!uuid.test(req.params.id) || typeof reference !== 'string' || !reference.trim() || reference.trim().length > 120) {
     return res.status(400).json({error:'Укажи номер банковской операции'});
   }
-  if (!process.env.PAYMENT_DETAILS) return res.status(503).json({error:'Реквизиты ещё не настроены'});
+
   const result = await database.query(
     "UPDATE storefront_orders SET payment_reference=$1, status='review' WHERE id=$2 AND customer_id=$3 AND status='awaiting_payment'",
     [reference.trim(), req.params.id, req.telegramUser.id]
@@ -169,7 +203,12 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
   if (!uuid.test(req.params.id) || !from || (needsPrice && (!Number.isInteger(priceMinor) || priceMinor < 1 || priceMinor > 10000000))) {
     return res.status(400).json({error:'Проверь статус и сумму'});
   }
-  if (needsPrice && !process.env.PAYMENT_DETAILS) return res.status(503).json({error:'Сначала настрой реквизиты на сервере'});
+  if (needsPrice) {
+    const {rows} = await database.query('SELECT payment_method FROM storefront_orders WHERE id=$1', [req.params.id]);
+    if (!paymentInstructions(await shopSettings(), rows[0]?.payment_method)) {
+      return res.status(503).json({error:'Сначала добавь реквизиты для выбранного способа оплаты'});
+    }
+  }
   const result = await database.query(
     'UPDATE storefront_orders SET status=$1, price_minor=COALESCE($2,price_minor), payment_reference=CASE WHEN $5 THEN NULL ELSE payment_reference END WHERE id=$3 AND status=ANY($4)',
     [status === 'review_rejected' ? 'awaiting_payment' : status, needsPrice ? priceMinor : null, req.params.id, from, status === 'review_rejected']
@@ -181,7 +220,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=admin-panel';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=shop-settings';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
@@ -210,7 +249,10 @@ app.post(webhookPath, async (req, res) => {
   const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
   const isAdmin = String(message.from?.id) === ADMIN_ID;
   const buttons = [[{text:'Открыть магазин', web_app:{url:shopUrl}}]];
-  if (isAdmin) buttons.push([{text:'Панель администратора', web_app:{url:shopUrl + '#admin'}}]);
+  if (isAdmin) {
+    buttons.push([{text:'Панель администратора', web_app:{url:shopUrl + '#admin'}}]);
+    buttons.push([{text:'Настройки магазина', web_app:{url:shopUrl + '#manage'}}]);
+  }
   const reply = command === '/admin'
     ? (isAdmin ? 'Панель администратора SHAKHA DONAT. Здесь можно назначать цену, проверять оплату и управлять заказами.' : 'Эта команда доступна только администратору.')
     : command === '/help'
