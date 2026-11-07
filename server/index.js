@@ -78,7 +78,7 @@ const products = new Map(Object.entries({
     "Благословение Луны"
   ]
 }));
-const paymentMethods = new Set(["alif","dc","eskhata","other"]);
+const paymentMethods = new Set(["alif","dc","other"]);
 const fields = 'id, product, package, account, amount, status, price_minor, payment_reference, payment_method, created_at';
 const adminOnly = (req, res, next) => {
   if (req.telegramUser.id !== ADMIN_ID) return res.status(403).json({error:'Доступ только для администратора'});
