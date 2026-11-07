@@ -70,6 +70,18 @@ article{background:#0c1729}label[hidden]{display:none}
 .auth-panel .auth-caption{font-size:12px;color:#9edbd4;margin:15px 0 0}
 @media(prefers-reduced-motion:reduce){.auth-brand-mark{animation:none}}
 .auth-panel{border-color:#ffbc6240;box-shadow:inset 0 1px #ffbc6230,0 24px 64px #0008}.auth-emblem{border-color:#ffbc6244;background:radial-gradient(circle,#443221,#101c30 80%);box-shadow:0 0 24px #ffbc6220}.auth-brand-mark{filter:drop-shadow(0 0 9px #ffbc6266)}.auth-panel h2{color:#fff}.auth-panel h2 span{color:#ffbc62}.auth-track i{background:linear-gradient(90deg,#d9944b,#ffe2a2)}
+
+:root{--lime:#78adff;--edge:#2a354c;--dim:#a4aec4}
+body{background:#0d121d;padding-bottom:calc(72px + env(safe-area-inset-bottom))}
+.hero{min-height:320px;background:radial-gradient(ellipse at 78% 50%,#215684,transparent 60%),#111c30}
+.primary,.active,.cta{background:#286ae1;color:white;border-color:#4786f5}
+.primary:hover,.cta:hover{background:#245cca}
+.card,dialog,.how,.featured button,.pack-tile{background:#141c2b;border-color:#2a354c}
+.cover{height:clamp(112px,24vw,185px)}.details{min-height:100px}.catalog-price{color:#88b9ff;font-weight:750}
+.pack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}.pack-tile{display:grid;gap:6px;text-align:left;min-height:72px}.pack-tile strong{color:#93bdff}.pack-tile[aria-pressed=true]{border-color:#599bff;box-shadow:inset 0 0 0 1px #599bff}
+nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:#0d1421;border-top:1px solid #2a354c;padding:5px max(8px,calc((100vw - 780px)/2)) calc(5px + env(safe-area-inset-bottom))}
+.store-nav button,.store-nav a{display:grid;place-content:center;gap:3px;text-align:center;min-height:54px;background:none;border:0;color:#c0cce0;font-size:12px}.store-nav span{font-size:21px;color:#78adff;line-height:1}
+@media(max-width:560px){.hero{min-height:350px}.art{height:170px}.hero h1{font-size:36px}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -96,15 +108,21 @@ article{background:#0c1729}label[hidden]{display:none}
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
 <details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.</p></details>
-</section><section class="how" aria-label="Аккаунт Telegram">
+</section><section class="how" id="profile" aria-label="Аккаунт Telegram">
 <h2>Аккаунт Telegram</h2>
 <p id="telegram-status" class="note" role="status">Открой магазин через Mini App бота @ShakhaDonatBot для входа.</p>
 <button id="telegram-login">Проверить Telegram-вход</button>
 <button id="admin-orders" hidden>Управление заказами</button>
 </section>
 </main>
+<nav class="store-nav" aria-label="Меню магазина">
+<a href="#"><span aria-hidden="true">⌂</span>Главная</a>
+<a href="#catalog"><span aria-hidden="true">⊞</span>Каталог</a>
+<button id="nav-orders"><span aria-hidden="true">▤</span>Заказы</button>
+<a href="#profile"><span aria-hidden="true">◎</span>Профиль</a>
+</nav>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="button" id="add-cart">В корзину</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="button" id="add-cart">В корзину</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
@@ -141,6 +159,33 @@ try {
 let category = 'all';
 let selectedProduct;
 let editingDraft;
+function referencePrice(product, pack) {
+  return product === 'Free Fire' && pack === '100 алмазов' ? '8,74 TJS' : '';
+}
+function renderPackages(product) {
+  const select = $('#package');
+  const grid = $('#pack-grid');
+  function update() {
+    for (const tile of grid.children) tile.setAttribute('aria-pressed', String(tile.dataset.pack === select.value));
+    const price = referencePrice(product[0], select.value);
+    $('#pack-quote').textContent = price ? 'Ориентир: ' + price + '. Итог подтвердит оператор.' : 'Стоимость уточнит оператор.';
+  }
+  grid.replaceChildren(...product[5].map(pack => {
+    const tile = document.createElement('button');
+    tile.type = 'button';
+    tile.className = 'pack-tile';
+    tile.dataset.pack = pack;
+    const title = document.createElement('b');
+    title.textContent = pack;
+    const price = document.createElement('strong');
+    const quote = referencePrice(product[0], pack);
+    price.textContent = quote ? '≈ ' + quote : 'По запросу';
+    tile.append(title, price);
+    tile.onclick = () => { select.value = pack; update(); };
+    return tile;
+  }));
+  update();
+}
 function openProduct(product, draft) {
   selectedProduct = product;
   editingDraft = draft;
@@ -159,6 +204,7 @@ function openProduct(product, draft) {
     if (isSteam && draft.amount) $('#amount').value = draft.amount;
   }
   $('#result').textContent = '';
+  renderPackages(product);
   $('#checkout').showModal();
 }
 document.querySelectorAll('[data-feature]').forEach(button => {
@@ -177,6 +223,11 @@ function renderCatalog() {
     card.querySelector('.cover span').textContent = mark;
     card.querySelector('.details b span').textContent = name;
     card.querySelector('.details small').textContent = description;
+    const price = document.createElement('small');
+    price.className = 'catalog-price';
+    const quote = referencePrice(name, product[5][0]);
+    price.textContent = quote ? 'Ориентир от ' + quote : 'Цена по запросу';
+    card.querySelector('.details').append(price);
     card.onclick = () => openProduct(product);
     return card;
   }));
@@ -269,6 +320,7 @@ function showHistory() {
   loadOrders(false);
 }
 $('#orders').onclick = showHistory;
+$('#nav-orders').onclick = showHistory;
 $('#count').textContent = drafts.length;
 renderCatalog();
 
