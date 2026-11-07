@@ -61,20 +61,22 @@ article{background:#0c1729}label[hidden]{display:none}
 <button data-feature="Telegram Stars"><i aria-hidden="true">★</i><span><b>Telegram Stars</b><small>Выбрать звёзды</small></span><span class="go" aria-hidden="true">↗</span></button>
 </section>
 <section id="catalog"><div class="heading"><h2>Каталог пополнений</h2><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button></div><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p></section>
-<section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Приём платежей и отправка заказов оператору пока не подключены.</p></section>
+<section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.</p></section>
 <section class="faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
-<details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Сейчас доступно сохранение черновиков. Цены и реквизиты появятся после подключения оплаты.</p></details>
+<details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.</p></details>
 </section><section class="how" aria-label="Аккаунт Telegram">
 <h2>Аккаунт Telegram</h2>
 <p id="telegram-status" class="note" role="status">Открой магазин через Mini App бота @ShakhaDonatBot для входа.</p>
 <button id="telegram-login">Проверить Telegram-вход</button>
+<button id="admin-orders" hidden>Управление заказами</button>
 </section>
 </main>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Цены и реквизиты появятся после подключения оператора.</p><button class="primary">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
-<dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои черновики</h2><p class="note">Черновики хранятся в этом браузере.</p><div id="saved"></div></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
+<dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <script>
 const products = [
   ['PUBG Mobile','Игровая валюта UC','PUBG','#b08038','game',['60 UC','325 UC','660 UC','1800 UC']],
@@ -221,34 +223,142 @@ function renderHistory() {
 function showHistory() {
   renderHistory();
   $('#history').showModal();
+  loadOrders(false);
 }
 $('#orders').onclick = showHistory;
 $('#count').textContent = drafts.length;
 renderCatalog();
 
-$('#telegram-login').onclick = async () => {
-  const button = $('#telegram-login');
-  const status = $('#telegram-status');
-  const initData = window.Telegram?.WebApp?.initData;
-  if (!initData) {
-    status.textContent = 'Открой магазин через кнопку Mini App в @ShakhaDonatBot.';
-    return;
-  }
-  button.disabled = true;
-  status.textContent = 'Проверяем Telegram…';
+
+const labels = {new:'Новая заявка', awaiting_payment:'Ожидает оплаты', review:'Проверяется', paid:'Оплата подтверждена', completed:'Выполнен', cancelled:'Отменён'};
+const telegram = window.Telegram?.WebApp;
+telegram?.ready();
+async function api(path, body) {
+  if (!telegram?.initData) throw new Error('Открой магазин через Mini App в @ShakhaDonatBot.');
+  let response;
   try {
-    const response = await fetch('https://shakha-donat-api-v2.onrender.com/api/me', {
-      headers: {Authorization: 'tma ' + initData}
+    response = await fetch('https://shakha-donat-api-v2.onrender.com/api' + path, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: {Authorization:'tma ' + telegram.initData, ...(body === undefined ? {} : {'Content-Type':'application/json'})},
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(25000)
     });
-    if (!response.ok) throw new Error('Telegram verification failed');
-    const {user} = await response.json();
-    status.textContent = 'Telegram подтверждён: ' + (user.first_name || user.username || user.id);
   } catch {
-    status.textContent = 'Не удалось подтвердить вход. Попробуй снова открыть магазин из бота.';
+    throw new Error('Сервер не ответил. Попробуй ещё раз.');
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(response.status === 401 ? 'Закрой Mini App и открой его заново через бота.' : data.error || 'Запрос не выполнен.');
+  return data;
+}
+let pending;
+$('#submit-order').onclick = async () => {
+  if (!$('#form').reportValidity()) return;
+  const order = {product:selectedProduct[0], pack:$('#package').value, account:$('#account').value.trim(), amount:$('#amount').disabled ? null : Number($('#amount').value)};
+  const key = JSON.stringify(order);
+  if (pending?.key !== key) pending = {key, id:crypto.randomUUID()};
+  const button = $('#submit-order');
+  const draftButton = $('#form').querySelector('button[type="submit"]');
+  button.disabled = draftButton.disabled = true;
+  $('#result').textContent = 'Отправляем заявку…';
+  try {
+    await api('/orders', {...order, id:pending.id});
+    pending = null;
+    $('#checkout').close();
+    showHistory();
+  } catch (error) {
+    $('#result').textContent = error.message;
   } finally {
-    button.disabled = false;
+    button.disabled = draftButton.disabled = false;
   }
 };
+function addAction(container, title, run) {
+  const button = document.createElement('button');
+  button.textContent = title;
+  button.onclick = async () => {
+    button.disabled = true;
+    try { await run(); } catch (error) { alert(error.message); }
+    finally { button.disabled = false; }
+  };
+  container.append(button);
+}
+function orderRow(order, paymentDetails, admin) {
+  const row = document.createElement('article');
+  const title = document.createElement('strong');
+  title.textContent = order.product + ' · ' + (order.amount ? order.amount + ' TJS' : order.package);
+  const detail = document.createElement('p');
+  detail.className = 'note';
+  detail.textContent = [labels[order.status], new Date(order.created_at).toLocaleString('ru'), order.account, order.id, order.price_minor != null ? (order.price_minor / 100).toFixed(2) + ' TJS' : '', order.payment_reference, admin ? order.customer_id : ''].filter(Boolean).join(' · ');
+  const actions = document.createElement('div');
+  actions.className = 'draft-actions';
+  row.append(title, detail, actions);
+  if (!admin && order.status === 'awaiting_payment' && paymentDetails) {
+    const details = document.createElement('p');
+    details.style.whiteSpace = 'pre-wrap';
+    details.textContent = paymentDetails;
+    row.insertBefore(details, actions);
+    addAction(actions, 'Указать номер перевода', async () => {
+      const reference = prompt('Введи номер операции из банковского приложения');
+      if (!reference?.trim()) return;
+      await api('/orders/' + order.id + '/payment', {reference});
+      await loadOrders(false);
+    });
+  }
+  if (admin) {
+    const update = async (status, priceMinor) => {
+      await api('/admin/orders/' + order.id, {status, priceMinor});
+      await loadOrders(true);
+    };
+    if (order.status === 'new') addAction(actions, 'Назначить цену', async () => {
+      const price = prompt('Сумма в сомони');
+      if (price === null) return;
+      const value = price.trim().replace(',', '.');
+      if (!/^\d+(\.\d{1,2})?$/.test(value) || Number(value) <= 0) throw new Error('Введи сумму больше нуля, максимум два знака после запятой.');
+      await update('awaiting_payment', Math.round(Number(value) * 100));
+    });
+    if (order.status === 'review') {
+      addAction(actions, 'Подтвердить оплату', async () => {
+        if (confirm('Перевод проверен по банковской выписке?')) await update('paid');
+      });
+      addAction(actions, 'Отклонить перевод', () => update('review_rejected'));
+    }
+    if (order.status === 'paid') addAction(actions, 'Отметить выполненным', () => update('completed'));
+    if (['new','awaiting_payment','review'].includes(order.status)) addAction(actions, 'Отменить', async () => {
+      if (confirm('Отменить заказ?')) await update('cancelled');
+    });
+  }
+  return row;
+}
+let historyRequest = 0;
+async function loadOrders(admin) {
+  const request = ++historyRequest;
+  const target = $(admin ? '#admin-list' : '#server-orders');
+  target.textContent = 'Загрузка…';
+  try {
+    const data = await api(admin ? '/admin/orders' : '/orders');
+    if (request !== historyRequest) return;
+    target.replaceChildren(...data.orders.map(order => orderRow(order, data.paymentDetails, admin)));
+    if (!data.orders.length) target.textContent = 'Заказов пока нет.';
+  } catch (error) {
+    if (request === historyRequest) target.textContent = error.message;
+  }
+}
+$('#admin-orders').onclick = () => {
+  $('#admin-dialog').showModal();
+  loadOrders(true);
+};
+async function checkTelegram() {
+  const button = $('#telegram-login');
+  button.disabled = true;
+  try {
+    const {user, isAdmin} = await api('/me');
+    $('#telegram-status').textContent = 'Telegram подтверждён: ' + (user.first_name || user.username || user.id);
+    $('#admin-orders').hidden = !isAdmin;
+  } catch (error) {
+    $('#telegram-status').textContent = error.message;
+  } finally { button.disabled = false; }
+}
+$('#telegram-login').onclick = checkTelegram;
+if (telegram?.initData) checkTelegram();
 </script>
 </body>
 </html>
