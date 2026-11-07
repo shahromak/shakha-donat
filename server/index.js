@@ -126,6 +126,23 @@ app.post('/api/orders', auth, orderRoute(async (req, res) => {
     if (!existing.rows.length) return res.status(409).json({error:'Не удалось создать заявку'});
   }
   res.status(rows.length ? 201 : 200).json({id});
+  if (rows.length && BOT_TOKEN) {
+    const lines = [
+      '✅ Заявка принята',
+      '',
+      'Код заказа: ' + id,
+      'Товар: ' + product,
+      'Пакет: ' + (product === 'Steam' ? amount + ' TJS' : pack),
+      'Статус: новая заявка',
+      '',
+      'Проверить статус можно в разделе «Заказы».'
+    ];
+    void telegramCall('sendMessage', {
+      chat_id:req.telegramUser.id,
+      text:lines.join('\n'),
+      reply_markup:{inline_keyboard:[[{text:'Открыть магазин', web_app:{url:shopUrl}}]]}
+    }).catch(() => console.warn('SHAKHA DONAT: order notification was not delivered'));
+  }
 }));
 app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
   const reference = req.body?.reference;
