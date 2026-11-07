@@ -147,6 +147,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
 [data-shop-theme=light] .owner-panel{background:#edf4ff;border-color:#bacfee}
 [data-shop-theme=light] .owner-heading>span{background:#dceaff;color:#214c85}
 .shop-banner img,.banner-preview{display:block;width:100%;max-height:320px;object-fit:contain;border-radius:10px}.shop-banner img[hidden],.banner-preview[hidden],#remove-banner-photo[hidden]{display:none}.shop-banner img:not([hidden])+div:not(:empty){margin-top:10px}.banner-preview{margin:8px 0}
+
+#support-dialog{width:min(540px,94vw);max-height:88dvh;overflow:auto;border-radius:20px;background:#142238;color:#f4f7ff;border:1px solid var(--edge)}
+#support-dialog [hidden]{display:none!important}.support-messages{display:flex;flex-direction:column;gap:9px;max-height:38dvh;overflow:auto;margin:12px 0;padding:6px 2px}
+.support-message{align-self:flex-start;max-width:88%;background:#243955;border-radius:14px;padding:10px 12px;overflow-wrap:anywhere}.support-message[data-own=true]{align-self:flex-end;background:#214e86}.support-message p{margin:4px 0 0;white-space:pre-wrap}.support-message small{opacity:.82}
+#support-form textarea,#support-thread{width:100%;font:inherit;color:inherit;background:#0e1b2d;border:1px solid var(--edge);border-radius:11px;padding:10px}
+[data-shop-theme=light] :is(#support-dialog,#support-form textarea,#support-thread){background:#fff;color:#152748}[data-shop-theme=light] .support-message{background:#e8f0fb}[data-shop-theme=light] .support-message[data-own=true]{background:#d4e7ff}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -173,7 +179,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
 <details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.</p></details>
-</section>
+<details><summary>Где посмотреть статус и код заказа?</summary><p class="note">Открой «Заказы» → «Отправленные заказы». Код также приходит сообщением от бота, если ты запустил его в Telegram.</p></details>
+<details><summary>Что делать, если я ошибся в ID или @username?</summary><p class="note">Напиши оператору и укажи код заказа. Перед переводом сверь данные получателя и дождись ответа.</p></details>
+<details><summary>Я оплатил, но статус не изменился. Что делать?</summary><p class="note">Открой заказ и отправь номер банковской операции. Если перевод уже отправлен на проверку, напиши оператору и укажи код заказа. Не отправляй пароль, PIN или код из SMS.</p></details>
+<details><summary>Как связаться с оператором?</summary><p class="note">Открой «Поддержка» в профиле и напиши сообщение. Ответ появится в том же чате.</p></details></section>
 </main>
 <main id="profile-screen" hidden><section id="profile" aria-labelledby="profile-title">
 <div class="profile-heading"><a href="#" aria-label="На главную">‹</a><h2 id="profile-title">Профиль</h2></div>
@@ -185,7 +194,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="profile-links">
 <button id="profile-orders"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6m-6 4h6"/></svg></span><span><b>Мои заказы</b><small>История заявок и их статусы</small></span><span aria-hidden="true">›</span></button>
 <button id="profile-cart"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg></span><span><b>Корзина</b><small>Товары, которые ты выбрал</small></span><span aria-hidden="true">›</span></button>
-<a href="#shop-faq"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm-3-13a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></svg></span><span><b>Частые вопросы</b><small>Как оформить и оплатить заказ</small></span><span aria-hidden="true">›</span></a>
+<button id="profile-support" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 16a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2zM8 9h8m-8 4h5"/></svg></span><span><b>Поддержка</b><small>Чат с оператором</small></span><span aria-hidden="true">›</span></button><a href="#shop-faq"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm-3-13a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></svg></span><span><b>Частые вопросы</b><small>Как оформить и оплатить заказ</small></span><span aria-hidden="true">›</span></a>
 </div>
 <section class="shop-settings" aria-labelledby="shop-settings-title"><h3 id="shop-settings-title">Настройки</h3><label><span>Язык</span><select id="shop-language"><option value="ru">Русский</option><option value="tg">Тоҷикӣ</option></select></label><label><span>Тема</span><select id="shop-theme"><option value="dark">Тёмная</option><option value="light">Светлая</option></select></label></section><p id="telegram-status" class="note" role="status">Открой магазин через @ShakhaDonatBot для входа.</p>
 <a id="telegram-open-bot" class="cta primary" href="https://t.me/ShakhaDonatBot">Открыть в Telegram</a>
@@ -194,7 +203,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div class="owner-heading"><h3 id="owner-title">Управление магазином</h3><span>Только для владельца</span></div>
 <div class="profile-links owner-links">
 <button id="admin-orders" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6m-6 4h6"/></svg></span><span><b>Заказы клиентов</b><small>Цены, проверка оплаты и статусы</small></span><span aria-hidden="true">›</span></button>
-<button id="open-settings" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-6 2v4"/></svg></span><span><b>Настройки магазина</b><small>Прайс, реквизиты и баннер</small></span><span aria-hidden="true">›</span></button>
+<button id="open-settings" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-6 2v4"/></svg></span><span><b>Настройки магазина</b><small>Прайс, реквизиты и баннер</small></span><span aria-hidden="true">›</span></button><button id="owner-support" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 16a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2zM8 9h8m-8 4h5"/></svg></span><span><b>Поддержка клиентов</b><small>Входящие сообщения и ответы</small></span><span aria-hidden="true">›</span></button>
 </div></section>
 </section></main>
 <nav class="store-nav" aria-label="Меню магазина">
@@ -226,6 +235,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <label><span>Баннер на главной</span><textarea id="settings-banner" rows="3" maxlength="300" placeholder="Акция или объявление"></textarea></label><label><span>Фото баннера</span><input id="settings-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"></label>
 <img id="settings-banner-preview" class="banner-preview" alt="Предпросмотр баннера" hidden>
 <button id="remove-banner-photo" type="button" hidden>Удалить фото</button><p class="note">Можно оставить только фото или только текст. Очисти оба поля, чтобы скрыть баннер.</p><button id="settings-save" class="primary" type="submit">Опубликовать настройки</button></form></dialog>
+<dialog id="support-dialog" aria-labelledby="support-title"><button class="close" aria-label="Закрыть">×</button><h2 id="support-title">Поддержка</h2><p id="support-presence" class="note" role="status"></p>
+<div id="support-inbox" hidden><label for="support-thread">Диалоги покупателей</label><select id="support-thread"><option value="">Выбери диалог</option></select></div>
+<div id="support-messages" class="support-messages" role="log" aria-label="Сообщения"></div>
+<form id="support-form" hidden><label><span>Сообщение</span><textarea id="support-text" maxlength="1500" rows="3" required placeholder="Напиши, чем помочь"></textarea></label><button id="support-send" class="primary" type="submit">Отправить</button></form><p id="support-status" class="note" role="status"></p></dialog>
 <script>
 const products = [
   ["PUBG Mobile","Игровая валюта UC","PUBG","#b08038","game",["60 UC","325 UC","660 UC","1800 UC"]],
@@ -961,6 +974,114 @@ for (const key of ['language','theme']) {
     applyAppearance();
   };
 }
+
+let supportAdmin = false;
+let supportTimer;
+let supportVersion = 0;
+let supportRequest = 0;
+let supportSignature = '';
+const supportDialog = $('#support-dialog');
+function drawSupport(messages) {
+  const list = $('#support-messages');
+  const signature = messages.map(message => message.id).join(',');
+  if (signature === supportSignature) return;
+  supportSignature = signature;
+  const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 70;
+  list.replaceChildren(...messages.map(message => {
+    const row = document.createElement('div');
+    row.className = 'support-message';
+    row.dataset.own = String(message.sender === (supportAdmin ? 'operator' : 'customer'));
+    const meta = document.createElement('small');
+    const sender = {customer:supportAdmin ? 'Покупатель' : 'Ты',operator:'Оператор',auto:'Автоответ'};
+    meta.textContent = sender[message.sender] + ' · ' + new Date(message.created_at).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+    const body = document.createElement('p');
+    body.textContent = message.body;
+    row.append(meta,body);
+    return row;
+  }));
+  if (nearBottom) list.scrollTop = list.scrollHeight;
+}
+async function refreshSupport() {
+  if (!supportDialog.open || document.hidden) return;
+  const version = supportVersion;
+  const request = ++supportRequest;
+  const current = () => version === supportVersion && request === supportRequest && supportDialog.open;
+  try {
+    if (!supportAdmin) {
+      const data = await api('/support');
+      if (!current()) return;
+      $('#support-presence').textContent = data.online ? 'Оператор в сети' : 'Оператор не в сети';
+      $('#support-form').hidden = false;
+      drawSupport(data.messages);
+    } else {
+      const select = $('#support-thread');
+      const data = await api('/admin/support');
+      if (!current()) return;
+      const chosen = select.value;
+      select.replaceChildren(new Option('Выбери диалог', ''), ...data.threads.map(thread =>
+        new Option((thread.sender === 'customer' ? '● ' : '') + 'Telegram ID ' + thread.customer_id, thread.customer_id)));
+      select.value = data.threads.some(thread => thread.customer_id === chosen) ? chosen : '';
+      const customer = select.value;
+      $('#support-presence').textContent = data.threads.length ? 'Ты в сети как оператор' : 'Пока нет сообщений покупателей.';
+      $('#support-form').hidden = !customer;
+      if (customer) {
+        const thread = await api('/admin/support/' + encodeURIComponent(customer));
+        if (!current() || select.value !== customer) return;
+        drawSupport(thread.messages);
+      } else drawSupport([]);
+    }
+    $('#support-status').textContent = '';
+  } catch (error) {
+    if (current()) $('#support-status').textContent = error.message;
+  }
+}
+function openSupport(admin) {
+  if (admin && $('#owner-panel').hidden) return;
+  supportAdmin = admin;
+  supportVersion++;
+  supportSignature = '';
+  $('#support-messages').replaceChildren();
+  $('#support-thread').value = '';
+  $('#support-inbox').hidden = !admin;
+  $('#support-form').hidden = true;
+  $('#support-text').value = '';
+  $('#support-presence').textContent = 'Загрузка…';
+  $('#support-status').textContent = '';
+  supportDialog.showModal();
+  clearInterval(supportTimer);
+  supportTimer = setInterval(refreshSupport,25000);
+  void refreshSupport();
+}
+$('#profile-support').onclick = () => openSupport(false);
+$('#owner-support').onclick = () => openSupport(true);
+$('#support-thread').onchange = () => {
+  supportVersion++;
+  supportSignature = '';
+  $('#support-messages').replaceChildren();
+  $('#support-text').value = '';
+  void refreshSupport();
+};
+supportDialog.addEventListener('close', () => {
+  supportVersion++;
+  clearInterval(supportTimer);
+});
+$('#support-form').onsubmit = async event => {
+  event.preventDefault();
+  const message = $('#support-text').value.trim();
+  const customer = $('#support-thread').value;
+  const button = $('#support-send');
+  if (!message || button.disabled || (supportAdmin && !customer)) return;
+  const version = supportVersion;
+  button.disabled = true;
+  try {
+    await api(supportAdmin ? '/admin/support/' + encodeURIComponent(customer) : '/support', {message});
+    if (version !== supportVersion) return;
+    if ($('#support-text').value.trim() === message) $('#support-text').value = '';
+    await refreshSupport();
+  } catch (error) {
+    if (version === supportVersion) $('#support-status').textContent = error.message;
+  } finally {button.disabled = false;}
+};
 applyAppearance();
 void refreshShopSettings();
 </script>
