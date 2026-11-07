@@ -108,7 +108,7 @@ function orderRoute(handler) {
         SELECT 1, '{"prices":{"Mobile Legends":{"68 алмазов":1368,"135 алмазов":2728,"160 алмазов":3090,"225 алмазов":4679,"265 алмазов":5248,"275 алмазов":5478,"325 алмазов":6338,"390 алмазов":5961,"650 алмазов":12615,"970 алмазов":18544,"1290 алмазов":24722,"1775 алмазов":33332,"2600 алмазов":50454,"6400 алмазов":131132}},"payments":{},"banner":""}'::jsonb FROM first_run
       ON CONFLICT (id) DO UPDATE SET data=jsonb_set(storefront_settings.data,'{prices}',
         COALESCE(storefront_settings.data->'prices','{}'::jsonb) || jsonb_build_object('Mobile Legends',
-          COALESCE(storefront_settings.data->'prices'->'Mobile Legends','{}'::jsonb) || EXCLUDED.data->'prices'->'Mobile Legends'))`)
+          COALESCE(storefront_settings.data->'prices'->'Mobile Legends','{}'::jsonb) || (EXCLUDED.data->'prices'->'Mobile Legends')))`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
