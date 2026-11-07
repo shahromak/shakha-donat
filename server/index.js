@@ -8,7 +8,12 @@ const app=express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(express.json({limit:'20kb'}));
+const defaultJson = express.json({limit:'20kb'});
+const settingsJson = express.json({limit:'240kb'});
+app.use((req,res,next) => {
+  const parser = req.method === 'POST' && req.path === '/api/admin/settings' ? settingsJson : defaultJson;
+  parser(req,res,next);
+});
 app.use('/api',rateLimit({windowMs:15*60*1000,limit:90,standardHeaders:'draft-7',legacyHeaders:false}));
 const BOT_TOKEN=process.env.TELEGRAM_BOT_TOKEN||'';
 const ADMIN_ID=String(process.env.ADMIN_TELEGRAM_ID||'8465117749');
@@ -113,26 +118,28 @@ function paymentInstructions(settings, method) {
   return settings.payments?.[method] || process.env.PAYMENT_DETAILS || '';
 }
 app.get('/api/shop/settings', orderRoute(async (_req, res) => {
-  const {prices, banner} = await shopSettings();
-  res.json({prices, banner});
+  const {prices, banner, bannerImage = ''} = await shopSettings();
+  res.json({prices, banner, bannerImage});
 }));
 app.get('/api/admin/settings', auth, adminOnly, orderRoute(async (_req, res) => {
   res.json({settings:await shopSettings(), catalog:Object.fromEntries(products), methods:[...paymentMethods]});
 }));
 app.post('/api/admin/settings', auth, adminOnly, orderRoute(async (req, res) => {
-  const {prices, payments, banner} = req.body || {};
+  const {prices, payments, banner, bannerImage = ''} = req.body || {};
+  const validImage = typeof bannerImage === 'string' && bannerImage.length <= 200000 &&
+    (!bannerImage || /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(bannerImage));
   const record = value => value && typeof value === 'object' && !Array.isArray(value);
   const validPrices = record(prices) && Object.entries(prices).every(([product, packs]) =>
     products.has(product) && product !== 'Steam' && record(packs) && Object.entries(packs).every(([pack, minor]) =>
       products.get(product).includes(pack) && Number.isInteger(minor) && minor > 0 && minor <= 10000000));
   const validPayments = record(payments) && Object.entries(payments).every(([method, value]) =>
     paymentMethods.has(method) && typeof value === 'string' && value.length <= 1200);
-  if (!validPrices || !validPayments || typeof banner !== 'string' || banner.length > 300) {
+  if (!validPrices || !validPayments || !validImage || typeof banner !== 'string' || banner.length > 300) {
     return res.status(400).json({error:'Проверь цены, реквизиты и текст баннера'});
   }
   await database.query(
     'INSERT INTO storefront_settings (id,data) VALUES (1,$1::jsonb) ON CONFLICT (id) DO UPDATE SET data=EXCLUDED.data',
-    [JSON.stringify({prices,payments,banner:banner.trim()})]
+    [JSON.stringify({prices,payments,banner:banner.trim(),bannerImage})]
   );
   res.json({ok:true});
 }));
@@ -220,7 +227,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=shop-settings';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=banner-photo';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
