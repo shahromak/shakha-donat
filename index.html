@@ -153,6 +153,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .support-message{align-self:flex-start;max-width:88%;background:#243955;border-radius:14px;padding:10px 12px;overflow-wrap:anywhere}.support-message[data-own=true]{align-self:flex-end;background:#214e86}.support-message p{margin:4px 0 0;white-space:pre-wrap}.support-message small{opacity:.82}
 #support-form textarea,#support-thread{width:100%;font:inherit;color:inherit;background:#0e1b2d;border:1px solid var(--edge);border-radius:11px;padding:10px}
 [data-shop-theme=light] :is(#support-dialog,#support-form textarea,#support-thread){background:#fff;color:#152748}[data-shop-theme=light] .support-message{background:#e8f0fb}[data-shop-theme=light] .support-message[data-own=true]{background:#d4e7ff}
+
+#faq-screen[hidden],.payment-dialog [hidden]{display:none!important}
+.faq-back{display:inline-block;margin-top:16px;padding:10px;border:1px solid var(--edge);border-radius:10px}
+.payment-dialog{width:min(510px,94vw);max-height:88dvh;overflow:auto;background:#142238;color:#f4f7ff;border:1px solid var(--edge);border-radius:20px;padding:20px}
+.payment-summary{display:grid;grid-template-columns:minmax(80px,auto) 1fr;gap:12px;background:#0e1a2d;border-radius:12px;padding:14px}.payment-summary dd{margin:0;font-weight:700;overflow-wrap:anywhere}
+.order-transfer{white-space:pre-wrap;overflow-wrap:anywhere;background:#172c48;border-radius:12px;padding:12px}
+#receipt-preview{max-width:100%;display:block;margin:10px auto}
+[data-shop-theme=light] :is(.payment-dialog,.payment-summary,.order-transfer){background:#f2f7ff;color:#162746}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -175,15 +183,16 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </section>
 <section id="catalog"><div class="heading"><h2>Каталог пополнений</h2><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button></div><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p></section>
 <section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.</p></section>
-<section class="faq" id="shop-faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
+
+</main>
+<main id="faq-screen" hidden><a class="faq-back" href="#profile">‹ Назад в профиль</a><section class="faq" id="shop-faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
-<details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.</p></details>
+<details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода нажми «Подтвердить платёж» и загрузи чек.</p></details>
 <details><summary>Где посмотреть статус и код заказа?</summary><p class="note">Открой «Заказы» → «Отправленные заказы». Код также приходит сообщением от бота, если ты запустил его в Telegram.</p></details>
 <details><summary>Что делать, если я ошибся в ID или @username?</summary><p class="note">Напиши оператору и укажи код заказа. Перед переводом сверь данные получателя и дождись ответа.</p></details>
-<details><summary>Я оплатил, но статус не изменился. Что делать?</summary><p class="note">Открой заказ и отправь номер банковской операции. Если перевод уже отправлен на проверку, напиши оператору и укажи код заказа. Не отправляй пароль, PIN или код из SMS.</p></details>
-<details><summary>Как связаться с оператором?</summary><p class="note">Открой «Поддержка» в профиле и напиши сообщение. Ответ появится в том же чате.</p></details></section>
-</main>
+<details><summary>Я оплатил, но статус не изменился. Что делать?</summary><p class="note">Открой заказ и загрузи скриншот или PDF банковского чека. Если чек уже отправлен на проверку, напиши оператору и укажи код заказа. Не отправляй пароль, PIN или код из SMS.</p></details>
+<details><summary>Как связаться с оператором?</summary><p class="note">Открой «Поддержка» в профиле и напиши сообщение. Ответ появится в том же чате.</p></details></section></main>
 <main id="profile-screen" hidden><section id="profile" aria-labelledby="profile-title">
 <div class="profile-heading"><a href="#" aria-label="На главную">‹</a><h2 id="profile-title">Профиль</h2></div>
 <div class="profile-card">
@@ -239,6 +248,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <div id="support-inbox" hidden><label for="support-thread">Диалоги покупателей</label><select id="support-thread"><option value="">Выбери диалог</option></select></div>
 <div id="support-messages" class="support-messages" role="log" aria-label="Сообщения"></div>
 <form id="support-form" hidden><label><span>Сообщение</span><textarea id="support-text" maxlength="1500" rows="3" required placeholder="Напиши, чем помочь"></textarea></label><button id="support-send" class="primary" type="submit">Отправить</button></form><p id="support-status" class="note" role="status"></p></dialog>
+<dialog id="review-checkout" class="payment-dialog" aria-labelledby="review-title"><button class="close" aria-label="Закрыть">×</button><h2 id="review-title">Проверь заказ</h2><dl id="checkout-review-data" class="payment-summary"></dl><p class="note">Проверь получателя и сумму. После подтверждения покажем реквизиты.</p><button id="confirm-checkout" class="primary" type="button">Подтвердить данные</button><p id="review-status" class="note" role="status"></p></dialog>
+<dialog id="receipt-dialog" class="payment-dialog" aria-labelledby="receipt-title"><button class="close" aria-label="Закрыть">×</button><h2 id="receipt-title">Загрузить чек</h2><p class="note">Прикрепи скриншот или PDF банковского чека. Форматы JPG, PNG, PDF до 3 МБ.</p><form id="receipt-form"><label><span>Файл чека</span><input id="receipt-file" type="file" accept="image/jpeg,image/png,application/pdf" required></label><button id="receipt-send" class="primary" type="submit">Отправить чек</button></form><p id="receipt-status" class="note" role="status"></p></dialog>
+<dialog id="receipt-view" class="payment-dialog" aria-labelledby="receipt-view-title"><button class="close" aria-label="Закрыть">×</button><h2 id="receipt-view-title">Чек оплаты</h2><img id="receipt-preview" alt="Чек оплаты" hidden><a id="receipt-download" class="cta primary" download>Скачать чек</a></dialog>
 <script>
 const products = [
   ["PUBG Mobile","Игровая валюта UC","PUBG","#b08038","game",["60 UC","325 UC","660 UC","1800 UC"]],
@@ -654,26 +666,109 @@ async function api(path, body) {
   return data;
 }
 let pending;
+async function quoteOrder(order) {
+  const {priceMinor} = await api('/orders/quote', {
+    product:order.product,pack:order.pack,paymentMethod:order.paymentMethod
+  });
+  return priceMinor;
+}
+const money = minor => formatQuote.format(minor / 100) + ' TJS';
+function reviewSummary(entries) {
+  $('#checkout-review-data').replaceChildren(...entries.flatMap(([key,value]) => {
+    const label = document.createElement('dt');
+    const data = document.createElement('dd');
+    label.textContent = key;
+    data.textContent = value;
+    return [label,data];
+  }));
+}
 $('#submit-order').onclick = async () => {
   if (!$('#form').reportValidity()) return;
   const order = {paymentMethod:selectedPaymentMethod(), product:selectedProduct[0], pack:$('#package').value, account:$('#account').value.trim(), amount:$('#amount').disabled ? null : Number($('#amount').value)};
-  const key = JSON.stringify(order);
-  if (pending?.key !== key) pending = {key, id:crypto.randomUUID()};
+  if (!order.account) {
+    $('#result').textContent = 'Введи ID или имя пользователя.';
+    return;
+  }
   const button = $('#submit-order');
-  const draftButton = $('#form').querySelector('button[type="submit"]');
-  button.disabled = draftButton.disabled = true;
-  $('#result').textContent = 'Отправляем заявку…';
+  button.disabled = true;
   try {
-    await api('/orders', {...order, id:pending.id});
+    const priceMinor = await quoteOrder(order);
+    if (!$('#checkout').open) return;
+    const key = JSON.stringify({...order,priceMinor});
+    if (pending?.key !== key) pending = {key,id:crypto.randomUUID()};
+    pending.order = {...order,confirmedPriceMinor:priceMinor,id:pending.id};
+    reviewSummary([['Товар',order.product],['Пакет',order.pack],['Получатель',order.account],['Банк',paymentNames[order.paymentMethod]],['К оплате',money(priceMinor)]]);
+    $('#review-status').textContent = '';
+    $('#review-checkout').showModal();
+  } catch (error) {
+    $('#result').textContent = error.message;
+  } finally {button.disabled = false;}
+};
+$('#confirm-checkout').onclick = async () => {
+  if (!pending?.order || $('#confirm-checkout').disabled) return;
+  const button = $('#confirm-checkout');
+  button.disabled = true;
+  try {
+    await api('/orders', pending.order);
     pending = null;
+    $('#review-checkout').close();
     $('#checkout').close();
     showHistory();
   } catch (error) {
-    $('#result').textContent = error.message;
-  } finally {
-    button.disabled = draftButton.disabled = false;
-  }
+    $('#review-status').textContent = error.message;
+  } finally {button.disabled = false;}
 };
+let receiptOrder;
+function openReceipt(order) {
+  receiptOrder = order;
+  $('#receipt-form').reset();
+  $('#receipt-status').textContent = '';
+  $('#receipt-dialog').showModal();
+}
+$('#receipt-form').onsubmit = async event => {
+  event.preventDefault();
+  const file = $('#receipt-file').files[0];
+  const button = $('#receipt-send');
+  if (!file || button.disabled) return;
+  const order = receiptOrder;
+  if (!file.size || file.size > 3145728) {
+    $('#receipt-status').textContent = 'Выбери чек размером до 3 МБ.';
+    return;
+  }
+  button.disabled = true;
+  $('#receipt-status').textContent = 'Загружаем чек…';
+  try {
+    const data = await new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(',')[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    await api('/orders/' + order.id + '/payment', {receipt:data,paymentMethod:order.payment_method});
+    $('#receipt-dialog').close();
+    await loadOrders(false);
+  } catch (error) {
+    $('#receipt-status').textContent = error.message || 'Не удалось загрузить чек.';
+  } finally {button.disabled = false;}
+};
+let receiptUrl;
+async function viewReceipt(order) {
+  const data = await api('/admin/orders/' + order.id + '/receipt');
+  const content = Uint8Array.from(atob(data.receipt), char => char.charCodeAt(0));
+  receiptUrl = URL.createObjectURL(new Blob([content], {type:data.mime}));
+  const preview = $('#receipt-preview');
+  preview.hidden = !data.mime.startsWith('image/');
+  if (!preview.hidden) preview.src = receiptUrl;
+  const download = $('#receipt-download');
+  download.href = receiptUrl;
+  download.download = 'receipt-' + order.id + '.' + ({'application/pdf':'pdf','image/png':'png','image/jpeg':'jpg'}[data.mime] || 'bin');
+  $('#receipt-view').showModal();
+}
+$('#receipt-view').addEventListener('close', () => {
+  if (receiptUrl) URL.revokeObjectURL(receiptUrl);
+  $('#receipt-preview').removeAttribute('src');
+  $('#receipt-download').removeAttribute('href');
+});
 function addAction(container, title, run) {
   const button = document.createElement('button');
   button.textContent = title;
@@ -716,16 +811,12 @@ function orderRow(order, paymentDetails, admin) {
   }
   if (!admin && order.status === 'awaiting_payment' && paymentDetails) {
     const details = document.createElement('p');
-    details.style.whiteSpace = 'pre-wrap';
-    details.textContent = paymentDetails;
+    details.className = 'order-transfer';
+    details.textContent = 'Переведи ' + money(order.price_minor) + ' · ' + (paymentNames[order.payment_method] || '') + '\n' + paymentDetails;
     row.insertBefore(details, actions);
-    addAction(actions, 'Указать номер перевода', async () => {
-      const reference = prompt('Введи номер операции из банковского приложения');
-      if (!reference?.trim()) return;
-      await api('/orders/' + order.id + '/payment', {reference});
-      await loadOrders(false);
-    });
+    addAction(actions, 'Подтвердить платёж', () => openReceipt(order));
   }
+  if (admin && order.has_receipt) addAction(actions, 'Открыть чек', () => viewReceipt(order));
   if (admin) {
     const update = async (status, priceMinor) => {
       await api('/admin/orders/' + order.id, {status, priceMinor});
@@ -897,7 +988,11 @@ $('#send-cart').onclick = async () => {
   renderCart();
   let sent = 0;
   try {
-    for (const item of [...cart]) {
+    const quoted = [];
+    for (const item of [...cart]) quoted.push({...item, confirmedPriceMinor:await quoteOrder(item)});
+    const summary = quoted.map(item => item.product + ' · ' + item.pack + ' · ' + item.account + ' · ' + (paymentNames[item.paymentMethod] || '') + ' · ' + money(item.confirmedPriceMinor)).join('\n');
+    if (!confirm('Проверь получателей и суммы. Подтвердить заказы?\n\n' + summary)) return;
+    for (const item of quoted) {
       $('#cart-status').textContent = 'Отправляем ' + item.product + '…';
       await api('/orders', item);
       saveCart(cart.filter(entry => entry.id !== item.id));
@@ -918,14 +1013,17 @@ $('#send-cart').onclick = async () => {
 renderCart();
 function showScreen() {
   const profile = ['#profile','#admin','#manage'].includes(location.hash);
-  $('#storefront').hidden = profile;
+  const faq = location.hash === '#shop-faq';
+  $('#storefront').hidden = profile || faq;
+  $('#faq-screen').hidden = !faq;
   $('#profile-screen').hidden = !profile;
   if (profile) {
     $('#nav-profile').setAttribute('aria-current', 'page');
     window.scrollTo(0, 0);
   } else {
     $('#nav-profile').removeAttribute('aria-current');
-    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    if (faq) window.scrollTo(0, 0);
+    else if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
   }
 }
