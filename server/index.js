@@ -178,7 +178,7 @@ async function telegramCall(method, body = {}) {
     signal:AbortSignal.timeout(8000)
   });
   const result = await response.json();
-  if (!response.ok || !result.ok) throw new Error('Telegram rejected ' + method);
+  if (!response.ok || !result.ok) throw new Error(method + ' HTTP ' + response.status);
   return result.result;
 }
 
@@ -225,8 +225,9 @@ async function connectTelegramBot() {
       allowed_updates:['message']
     });
     console.log('SHAKHA DONAT: Telegram webhook registered');
-  } catch {
-    console.warn('SHAKHA DONAT: Telegram webhook registration failed');
+  } catch (error) {
+    const detail = /^(getMe|setWebhook) HTTP \d{3}$/.test(error.message) ? error.message : error.name;
+    console.warn('SHAKHA DONAT: Telegram webhook registration failed:', detail);
   }
 }
 
