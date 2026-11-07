@@ -161,6 +161,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .order-transfer{white-space:pre-wrap;overflow-wrap:anywhere;background:#172c48;border-radius:12px;padding:12px}
 #receipt-preview{max-width:100%;display:block;margin:10px auto}
 [data-shop-theme=light] :is(.payment-dialog,.payment-summary,.order-transfer){background:#f2f7ff;color:#162746}
+.stars-button{width:100%;margin-top:9px;min-height:46px;border:1px solid #c58e31;background:#3f2e15;color:#ffe4a2;font-weight:800}[data-shop-theme=light] .stars-button{background:#fff0cc;color:#593800}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -222,7 +223,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <a id="nav-profile" href="#profile"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg>Профиль</a>
 </nav>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend>Способ оплаты</legend><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4a8 8 0 1 0 1 15M8 16l4-9 4 9m-6-3h4"/></svg></span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/><path d="M3 20 21 4" stroke="#ff9b49"/></svg></span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/></svg></span><span><b>Visa / Mastercard и другие банки</b><small>Ручной перевод по реквизитам. Доступность подтвердит оператор.</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">После подтверждения цены открой «Заказы». Переводи деньги только по реквизитам, указанным в твоём заказе.</p><button type="button" id="submit-order" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>Оформить заявку</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend>Способ оплаты</legend><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4a8 8 0 1 0 1 15M8 16l4-9 4 9m-6-3h4"/></svg></span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/><path d="M3 20 21 4" stroke="#ff9b49"/></svg></span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/></svg></span><span><b>Visa / Mastercard и другие банки</b><small>Ручной перевод по реквизитам. Доступность подтвердит оператор.</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">После подтверждения цены открой «Заказы». Переводи деньги только по реквизитам, указанным в твоём заказе.</p><button type="button" id="submit-order" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>Оформить заявку</button><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
@@ -239,7 +240,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 </dialog>
 <dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8zM11 13 21 3"/></svg>Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
 <dialog id="settings-dialog" aria-labelledby="settings-title"><button class="close" aria-label="Закрыть">×</button><h2 id="settings-title">Настройки магазина</h2><p id="settings-status" class="note" role="status"></p><form id="settings-form" hidden>
-<h3>Цены пакетов</h3><p class="note">Укажи сумму в сомони. Пустое поле оставляет прежний ориентир или цену по запросу.</p><div id="settings-prices"></div>
+<h3>Цены пакетов</h3><p class="note">Укажи сумму в сомони. Пустое поле оставляет прежний ориентир или цену по запросу.</p><div id="settings-prices"></div><p class="note">Для оплаты через Telegram заполни отдельную цену в ⭐. Пустое поле выключает Stars для пакета.</p>
 <h3>Реквизиты для перевода</h3><p class="note">Заполни реквизиты отдельно для каждого банка. Пустое поле означает, что для этого способа нет реквизитов.</p><div id="settings-payments"></div>
 <label><span>Баннер на главной</span><textarea id="settings-banner" rows="3" maxlength="300" placeholder="Акция или объявление"></textarea></label><label><span>Фото баннера</span><input id="settings-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"></label>
 <img id="settings-banner-preview" class="banner-preview" alt="Предпросмотр баннера" hidden>
@@ -301,6 +302,7 @@ const referencePrices = {
 const formatQuote = new Intl.NumberFormat('ru', {maximumFractionDigits:2});
 
 let managedPrices = {};
+let managedStars = {};
 let availablePayments = null;
 let settingsLoading = false;
 let draftBannerImage = '';
@@ -313,6 +315,7 @@ async function refreshShopSettings() {
     if (!response.ok) return;
     const data = await response.json();
     managedPrices = data.prices || {};
+    managedStars = data.starsPrices || {};
     availablePayments = Array.isArray(data.availablePayments) ? data.availablePayments : null;
     updatePaymentChoices();
     const banner = $('#shop-banner');
@@ -412,7 +415,20 @@ function fillShopSettings({settings, catalog, methods}) {
       input.dataset.pack = pack;
       const minor = settings.prices?.[name]?.[pack];
       if (minor) input.value = (minor / 100).toFixed(2);
-      group.append(settingField(pack + ' · TJS', input));
+      input.dataset.currency = 'TJS';
+      const star = document.createElement('input');
+      star.type = 'number';
+      star.inputMode = 'numeric';
+      star.min = '1';
+      star.max = '10000';
+      star.step = '1';
+      star.dataset.product = name;
+      star.dataset.pack = pack;
+      star.dataset.currency = 'XTR';
+      star.placeholder = 'Stars не настроены';
+      const stars = settings.starsPrices?.[name]?.[pack];
+      if (stars) star.value = String(stars);
+      group.append(settingField(pack + ' · TJS', input), settingField(pack + ' · ⭐', star));
     }
     return group;
   });
@@ -450,16 +466,20 @@ $('#settings-form').onsubmit = async event => {
   const button = $('#settings-save');
   if (button.disabled || processingBannerImage) return;
   const prices = {};
+  const starsPrices = {};
   const payments = {};
   for (const input of document.querySelectorAll('#settings-prices input')) {
-    if (input.value) (prices[input.dataset.product] ??= {})[input.dataset.pack] = Math.round(input.valueAsNumber * 100);
+    if (!input.value) continue;
+    const stars = input.dataset.currency === 'XTR';
+    const target = stars ? starsPrices : prices;
+    (target[input.dataset.product] ??= {})[input.dataset.pack] = Math.round(input.valueAsNumber * (stars ? 1 : 100));
   }
   for (const input of document.querySelectorAll('#settings-payments textarea')) {
     payments[input.dataset.method] = input.value.trim();
   }
   button.disabled = true;
   try {
-    await api('/admin/settings', {prices,payments,banner:$('#settings-banner').value,bannerImage:draftBannerImage});
+    await api('/admin/settings', {prices,starsPrices,payments,banner:$('#settings-banner').value,bannerImage:draftBannerImage});
     $('#settings-status').textContent = 'Настройки опубликованы.';
     await refreshShopSettings();
   } catch (error) {
@@ -476,6 +496,9 @@ function renderPackages(product) {
   const grid = $('#pack-grid');
   function update() {
     for (const tile of grid.children) tile.setAttribute('aria-pressed', String(tile.dataset.pack === select.value));
+    const stars = managedStars[product[0]]?.[select.value];
+    $('#pay-stars').textContent = stars ? 'Оплатить ' + stars + ' ⭐' : 'Оплата в ⭐ не настроена';
+    $('#pay-stars').disabled = !stars;
     const price = referencePrice(product[0], select.value);
     $('#pack-quote').textContent = price ? 'Ориентир: ' + price + '. Итог подтвердит оператор.' : 'Стоимость уточнит оператор.';
   }
@@ -488,7 +511,8 @@ function renderPackages(product) {
     title.textContent = pack;
     const price = document.createElement('strong');
     const quote = referencePrice(product[0], pack);
-    price.textContent = quote ? '≈ ' + quote : 'По запросу';
+    const stars = managedStars[product[0]]?.[pack];
+    price.textContent = [quote ? '≈ ' + quote : '', stars ? stars + ' ⭐' : ''].filter(Boolean).join(' · ') || 'По запросу';
     tile.append(title, price);
     tile.onclick = () => { select.value = pack; update(); };
     return tile;
@@ -769,6 +793,35 @@ $('#receipt-view').addEventListener('close', () => {
   $('#receipt-preview').removeAttribute('src');
   $('#receipt-download').removeAttribute('href');
 });
+let pendingStars;
+async function launchStarsInvoice(order) {
+  if (typeof telegram?.openInvoice !== 'function') throw new Error('Открой магазин в приложении Telegram.');
+  const {invoice} = await api('/orders/stars',order);
+  telegram.openInvoice(invoice, status => {
+    if (status !== 'paid' && status !== 'pending') return;
+    pendingStars = null;
+    if ($('#checkout').open) $('#checkout').close();
+    if ($('#history').open) void loadOrders(false);
+    else showHistory();
+  });
+}
+$('#pay-stars').onclick = async () => {
+  if (!$('#form').reportValidity()) return;
+  const account = $('#account').value.trim();
+  const product = selectedProduct[0];
+  const pack = $('#package').value;
+  const confirmedStars = managedStars[product]?.[pack];
+  if (!account || !confirmedStars) return;
+  if (!confirm('Проверь заказ: ' + product + ' · ' + pack + '\nПолучатель: ' + account + '\nК оплате: ' + confirmedStars + ' ⭐')) return;
+  const data = {product,pack,account,confirmedStars};
+  const key = JSON.stringify(data);
+  if (pendingStars?.key !== key) pendingStars = {key,id:crypto.randomUUID()};
+  const button = $('#pay-stars');
+  button.disabled = true;
+  try { await launchStarsInvoice({...data,id:pendingStars.id}); }
+  catch (error) { $('#result').textContent = error.message; }
+  finally {button.disabled = false;}
+};
 function addAction(container, title, run) {
   const button = document.createElement('button');
   button.textContent = title;
@@ -785,11 +838,11 @@ function orderRow(order, paymentDetails, admin) {
   title.textContent = order.product + ' · ' + (order.amount ? order.amount + ' TJS' : order.package);
   const detail = document.createElement('p');
   detail.className = 'note';
-  detail.textContent = [labels[order.status], new Date(order.created_at).toLocaleString('ru'), order.account, paymentNames[order.payment_method], order.id, order.price_minor != null ? (order.price_minor / 100).toFixed(2) + ' TJS' : '', order.payment_reference, admin ? order.customer_id : ''].filter(Boolean).join(' · ');
+  detail.textContent = [labels[order.status], new Date(order.created_at).toLocaleString('ru'), order.account, paymentNames[order.payment_method], order.id, order.stars_amount ? order.stars_amount + ' ⭐' : order.price_minor != null ? (order.price_minor / 100).toFixed(2) + ' TJS' : '', order.payment_reference, admin ? order.customer_id : ''].filter(Boolean).join(' · ');
   const actions = document.createElement('div');
   actions.className = 'draft-actions';
   row.append(title, detail, actions);
-  if (!admin && ['new','awaiting_payment'].includes(order.status)) {
+  if (!admin && !order.stars_amount && ['new','awaiting_payment'].includes(order.status)) {
     if (order.status === 'awaiting_payment' && !paymentDetails) {
       const note = document.createElement('p');
       note.className = 'note';
@@ -815,6 +868,11 @@ function orderRow(order, paymentDetails, admin) {
     details.textContent = 'Переведи ' + money(order.price_minor) + ' · ' + (paymentNames[order.payment_method] || '') + '\n' + paymentDetails;
     row.insertBefore(details, actions);
     addAction(actions, 'Подтвердить платёж', () => openReceipt(order));
+  }
+  if (!admin && order.status === 'awaiting_payment' && order.stars_amount) {
+    addAction(actions, 'Оплатить в ⭐', () => launchStarsInvoice({
+      id:order.id,product:order.product,pack:order.package,account:order.account,confirmedStars:order.stars_amount
+    }));
   }
   if (admin && order.has_receipt) addAction(actions, 'Открыть чек', () => viewReceipt(order));
   if (admin) {
