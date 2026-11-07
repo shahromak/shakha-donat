@@ -162,6 +162,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 #receipt-preview{max-width:100%;display:block;margin:10px auto}
 [data-shop-theme=light] :is(.payment-dialog,.payment-summary,.order-transfer){background:#f2f7ff;color:#162746}
 .stars-button{width:100%;margin-top:9px;min-height:46px;border:1px solid #c58e31;background:#3f2e15;color:#ffe4a2;font-weight:800}[data-shop-theme=light] .stars-button{background:#fff0cc;color:#593800}
+.pack-bonus{color:#ffd678;font-weight:800}[data-shop-theme=light] .pack-bonus{color:#815600}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -260,7 +261,7 @@ const products = [
   ["Telegram Stars","Звёзды Telegram","★","#367cc1","telegram",["50 Stars","100 Stars","250 Stars","500 Stars","1000 Stars","2500 Stars"]],
   ["Telegram Premium","Подписка Telegram","✦","#8c50bf","telegram",["3 месяца","6 месяцев","12 месяцев"]],
   ["Steam","Пополнение кошелька","STEAM","#325f92","platform",["Указать сумму"]],
-  ["Mobile Legends","Игровые алмазы","MLBB","#247e86","game",["68 алмазов","135 алмазов","160 алмазов","225 алмазов","265 алмазов","275 алмазов","86 алмазов","172 алмаза","257 алмазов"]],
+  ["Mobile Legends","Игровые алмазы","MLBB","#247e86","game",["68 алмазов","135 алмазов","160 алмазов","225 алмазов","265 алмазов","275 алмазов","325 алмазов","390 алмазов","650 алмазов","970 алмазов","1290 алмазов","1775 алмазов","2600 алмазов","6400 алмазов","86 алмазов","172 алмаза","257 алмазов"]],
   ["Genshin Impact","Кристаллы и подписка","GENSHIN","#517d66","game",["60 кристаллов","330 кристаллов","Благословение Луны"]]
 ];
 const $ = selector => document.querySelector(selector);
@@ -277,14 +278,7 @@ const referencePrices = {
   "Free Fire": {
     "100 алмазов": 874
   },
-  "Mobile Legends": {
-    "68 алмазов": 1358,
-    "135 алмазов": 2708,
-    "160 алмазов": 3080,
-    "225 алмазов": 4659,
-    "265 алмазов": 5218,
-    "275 алмазов": 5459
-  },
+  "Mobile Legends": {"68 алмазов":1368,"135 алмазов":2728,"160 алмазов":3090,"225 алмазов":4679,"265 алмазов":5248,"275 алмазов":5478,"325 алмазов":6338,"390 алмазов":5961,"650 алмазов":12615,"970 алмазов":18544,"1290 алмазов":24722,"1775 алмазов":33332,"2600 алмазов":50454,"6400 алмазов":131132},
   "Telegram Stars": {
     "50 Stars": 900,
     "100 Stars": 1999,
@@ -491,6 +485,7 @@ function referencePrice(product, pack) {
   const minor = managedPrices[product]?.[pack] ?? referencePrices[product]?.[pack];
   return minor ? formatQuote.format(minor / 100) + ' TJS' : '';
 }
+const mlBonuses = {"68 алмазов":2,"135 алмазов":5,"160 алмазов":10,"225 алмазов":15,"265 алмазов":19,"275 алмазов":21,"325 алмазов":30,"390 алмазов":39,"650 алмазов":66,"970 алмазов":114,"1290 алмазов":156,"1775 алмазов":235,"2600 алмазов":376,"6400 алмазов":1102};
 function renderPackages(product) {
   const select = $('#package');
   const grid = $('#pack-grid');
@@ -512,8 +507,16 @@ function renderPackages(product) {
     const price = document.createElement('strong');
     const quote = referencePrice(product[0], pack);
     const stars = managedStars[product[0]]?.[pack];
-    price.textContent = [quote ? '≈ ' + quote : '', stars ? stars + ' ⭐' : ''].filter(Boolean).join(' · ') || 'По запросу';
-    tile.append(title, price);
+    price.textContent = [quote ? (managedPrices[product[0]]?.[pack] ? quote : '≈ ' + quote) : '', stars ? stars + ' ⭐' : ''].filter(Boolean).join(' · ') || 'По запросу';
+    const bonus = product[0] === 'Mobile Legends' ? mlBonuses[pack] : null;
+    tile.append(title);
+    if (bonus) {
+      const badge = document.createElement('small');
+      badge.className = 'pack-bonus';
+      badge.textContent = '+' + bonus + ' бонус';
+      tile.append(badge);
+    }
+    tile.append(price);
     tile.onclick = () => { select.value = pack; update(); };
     return tile;
   }));
