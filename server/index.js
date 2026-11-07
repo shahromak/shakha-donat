@@ -99,7 +99,7 @@ function orderRoute(handler) {
         package text NOT NULL, account text NOT NULL, amount numeric(9,2),
         status text NOT NULL DEFAULT 'new', price_minor integer,
         payment_reference text, created_at timestamptz NOT NULL DEFAULT now()
-      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE TABLE IF NOT EXISTS storefront_support (
+      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_details_snapshot text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE TABLE IF NOT EXISTS storefront_support (
         id bigserial PRIMARY KEY, customer_id text NOT NULL, sender text NOT NULL,
         body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
       ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
@@ -120,7 +120,7 @@ async function shopSettings() {
   return rows[0]?.data || {prices:{}, payments:{}, banner:''};
 }
 function paymentInstructions(settings, method) {
-  return settings.payments?.[method] || process.env.PAYMENT_DETAILS || '';
+  return method ? (settings.payments?.[method] || '').trim() : (process.env.PAYMENT_DETAILS || '').trim();
 }
 
 const supportOfflineReply = 'Сообщение получено. Сейчас оператор не в сети. Ответим здесь, как только сможем.';
@@ -183,8 +183,10 @@ app.post('/api/admin/support/:customer', auth, adminOnly, orderRoute(async (req,
   res.status(201).json({ok:true});
 }));
 app.get('/api/shop/settings', orderRoute(async (_req, res) => {
-  const {prices, banner, bannerImage = ''} = await shopSettings();
-  res.json({prices, banner, bannerImage});
+  const settings = await shopSettings();
+  const {prices, banner, bannerImage = ''} = settings;
+  const availablePayments = [...paymentMethods].filter(method => paymentInstructions(settings, method));
+  res.json({prices, banner, bannerImage, availablePayments});
 }));
 app.get('/api/admin/settings', auth, adminOnly, orderRoute(async (_req, res) => {
   res.json({settings:await shopSettings(), catalog:Object.fromEntries(products), methods:[...paymentMethods]});
@@ -209,10 +211,10 @@ app.post('/api/admin/settings', auth, adminOnly, orderRoute(async (req, res) => 
   res.json({ok:true});
 }));
 app.get('/api/orders', auth, orderRoute(async (req, res) => {
-  const {rows} = await database.query('SELECT ' + fields + ' FROM storefront_orders WHERE customer_id=$1 ORDER BY created_at DESC LIMIT 100', [req.telegramUser.id]);
+  const {rows} = await database.query('SELECT ' + fields + ', payment_details_snapshot FROM storefront_orders WHERE customer_id=$1 ORDER BY created_at DESC LIMIT 100', [req.telegramUser.id]);
   const settings = await shopSettings();
-  res.json({orders:rows.map(order => ({
-    ...order, paymentDetails:order.status === 'awaiting_payment' ? paymentInstructions(settings, order.payment_method) : ''
+  res.json({orders:rows.map(({payment_details_snapshot, ...order}) => ({
+    ...order, paymentDetails:order.status === 'awaiting_payment' ? (payment_details_snapshot || paymentInstructions(settings, order.payment_method)) : ''
   }))});
 }));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
@@ -250,15 +252,35 @@ app.post('/api/orders', auth, orderRoute(async (req, res) => {
     }).catch(() => console.warn('SHAKHA DONAT: order notification was not delivered'));
   }
 }));
+app.post('/api/orders/:id/method', auth, orderRoute(async (req,res) => {
+  const method = req.body?.paymentMethod;
+  if (!uuid.test(req.params.id) || !paymentMethods.has(method)) return res.status(400).json({error:'Выбери доступный способ оплаты'});
+  const details = paymentInstructions(await shopSettings(), method);
+  if (!details) return res.status(409).json({error:'Для этого банка ещё нет реквизитов'});
+  const result = await database.query(
+    "UPDATE storefront_orders SET payment_method=$1, payment_details_snapshot=CASE WHEN status='awaiting_payment' THEN $2 ELSE NULL END WHERE id=$3 AND customer_id=$4 AND status IN ('new','awaiting_payment')",
+    [method,details,req.params.id,req.telegramUser.id]
+  );
+  if (!result.rowCount) return res.status(409).json({error:'Способ оплаты уже нельзя изменить'});
+  res.json({ok:true});
+}));
 app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
   const reference = req.body?.reference;
   if (!uuid.test(req.params.id) || typeof reference !== 'string' || !reference.trim() || reference.trim().length > 120) {
     return res.status(400).json({error:'Укажи номер банковской операции'});
   }
 
+  const {rows} = await database.query(
+    "SELECT payment_method,payment_details_snapshot FROM storefront_orders WHERE id=$1 AND customer_id=$2 AND status='awaiting_payment'",
+    [req.params.id,req.telegramUser.id]
+  );
+  const order = rows[0];
+  if (!order || !(order.payment_details_snapshot || paymentInstructions(await shopSettings(), order.payment_method))) {
+    return res.status(409).json({error:'Заказ пока недоступен для оплаты'});
+  }
   const result = await database.query(
-    "UPDATE storefront_orders SET payment_reference=$1, status='review' WHERE id=$2 AND customer_id=$3 AND status='awaiting_payment'",
-    [reference.trim(), req.params.id, req.telegramUser.id]
+    "UPDATE storefront_orders SET payment_reference=$1, status='review' WHERE id=$2 AND customer_id=$3 AND status='awaiting_payment' AND payment_method IS NOT DISTINCT FROM $4",
+    [reference.trim(), req.params.id, req.telegramUser.id, order.payment_method]
   );
   if (!result.rowCount) return res.status(409).json({error:'Заявка недоступна для подтверждения оплаты'});
   res.json({ok:true});
@@ -275,15 +297,19 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
   if (!uuid.test(req.params.id) || !from || (needsPrice && (!Number.isInteger(priceMinor) || priceMinor < 1 || priceMinor > 10000000))) {
     return res.status(400).json({error:'Проверь статус и сумму'});
   }
+  let paymentSnapshot = null;
+  let paymentMethod = null;
   if (needsPrice) {
     const {rows} = await database.query('SELECT payment_method FROM storefront_orders WHERE id=$1', [req.params.id]);
-    if (!paymentInstructions(await shopSettings(), rows[0]?.payment_method)) {
+    paymentMethod = rows[0]?.payment_method ?? null;
+    paymentSnapshot = paymentInstructions(await shopSettings(), paymentMethod);
+    if (!paymentSnapshot) {
       return res.status(503).json({error:'Сначала добавь реквизиты для выбранного способа оплаты'});
     }
   }
   const result = await database.query(
-    'UPDATE storefront_orders SET status=$1, price_minor=COALESCE($2,price_minor), payment_reference=CASE WHEN $5 THEN NULL ELSE payment_reference END WHERE id=$3 AND status=ANY($4)',
-    [status === 'review_rejected' ? 'awaiting_payment' : status, needsPrice ? priceMinor : null, req.params.id, from, status === 'review_rejected']
+    'UPDATE storefront_orders SET status=$1, price_minor=COALESCE($2,price_minor), payment_reference=CASE WHEN $5 THEN NULL ELSE payment_reference END, payment_details_snapshot=COALESCE($6,payment_details_snapshot) WHERE id=$3 AND status=ANY($4) AND (NOT $7::boolean OR payment_method IS NOT DISTINCT FROM $8)',
+    [status === 'review_rejected' ? 'awaiting_payment' : status, needsPrice ? priceMinor : null, req.params.id, from, status === 'review_rejected', paymentSnapshot, needsPrice, paymentMethod]
   );
   if (!result.rowCount) return res.status(409).json({error:'Статус уже изменился или переход недоступен'});
   res.json({ok:true});
@@ -292,7 +318,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=support';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=payment-fix';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
