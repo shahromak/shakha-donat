@@ -140,14 +140,14 @@ nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template
 <dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary">Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
 <script>
 const products = [
-  ['PUBG Mobile','Игровая валюта UC','PUBG','#b08038','game',['60 UC','325 UC','660 UC','1800 UC']],
-  ['Free Fire','Игровые алмазы','FREE FIRE','#b24435','game',['100 алмазов','310 алмазов','520 алмазов']],
-  ['Roblox','Пополнение Robux','ROBLOX','#7760d4','game',['400 Robux','800 Robux','1700 Robux']],
-  ['Telegram Stars','Звёзды Telegram','★','#367cc1','telegram',['50 Stars','100 Stars','500 Stars']],
-  ['Telegram Premium','Подписка Telegram','✦','#8c50bf','telegram',['3 месяца','6 месяцев','12 месяцев']],
-  ['Steam','Пополнение кошелька','STEAM','#325f92','platform',['Указать сумму']],
-  ['Mobile Legends','Игровые алмазы','MLBB','#247e86','game',['86 алмазов','172 алмаза','257 алмазов']],
-  ['Genshin Impact','Кристаллы и подписка','GENSHIN','#517d66','game',['60 кристаллов','330 кристаллов','Благословение Луны']]
+  ["PUBG Mobile","Игровая валюта UC","PUBG","#b08038","game",["60 UC","325 UC","660 UC","1800 UC"]],
+  ["Free Fire","Игровые алмазы","FREE FIRE","#b24435","game",["100 алмазов","310 алмазов","520 алмазов"]],
+  ["Roblox","Пополнение Robux","ROBLOX","#7760d4","game",["400 Robux","800 Robux","1700 Robux"]],
+  ["Telegram Stars","Звёзды Telegram","★","#367cc1","telegram",["50 Stars","100 Stars","250 Stars","500 Stars","1000 Stars","2500 Stars"]],
+  ["Telegram Premium","Подписка Telegram","✦","#8c50bf","telegram",["3 месяца","6 месяцев","12 месяцев"]],
+  ["Steam","Пополнение кошелька","STEAM","#325f92","platform",["Указать сумму"]],
+  ["Mobile Legends","Игровые алмазы","MLBB","#247e86","game",["68 алмазов","135 алмазов","160 алмазов","225 алмазов","265 алмазов","275 алмазов","86 алмазов","172 алмаза","257 алмазов"]],
+  ["Genshin Impact","Кристаллы и подписка","GENSHIN","#517d66","game",["60 кристаллов","330 кристаллов","Благословение Луны"]]
 ];
 const $ = selector => document.querySelector(selector);
 const storageKey = 'shakha-drafts';
@@ -159,8 +159,36 @@ try {
 let category = 'all';
 let selectedProduct;
 let editingDraft;
+const referencePrices = {
+  "Free Fire": {
+    "100 алмазов": 874
+  },
+  "Mobile Legends": {
+    "68 алмазов": 1358,
+    "135 алмазов": 2708,
+    "160 алмазов": 3080,
+    "225 алмазов": 4659,
+    "265 алмазов": 5218,
+    "275 алмазов": 5459
+  },
+  "Telegram Stars": {
+    "50 Stars": 900,
+    "100 Stars": 1999,
+    "250 Stars": 4999,
+    "500 Stars": 9799,
+    "1000 Stars": 18999,
+    "2500 Stars": 45999
+  },
+  "Telegram Premium": {
+    "3 месяца": 14299,
+    "6 месяцев": 21299,
+    "12 месяцев": 37900
+  }
+};
+const formatQuote = new Intl.NumberFormat('ru', {maximumFractionDigits:2});
 function referencePrice(product, pack) {
-  return product === 'Free Fire' && pack === '100 алмазов' ? '8,74 TJS' : '';
+  const minor = referencePrices[product]?.[pack];
+  return minor ? formatQuote.format(minor / 100) + ' TJS' : '';
 }
 function renderPackages(product) {
   const select = $('#package');
@@ -225,7 +253,8 @@ function renderCatalog() {
     card.querySelector('.details small').textContent = description;
     const price = document.createElement('small');
     price.className = 'catalog-price';
-    const quote = referencePrice(name, product[5][0]);
+    const amounts = Object.values(referencePrices[name] || {});
+    const quote = amounts.length ? formatQuote.format(Math.min(...amounts) / 100) + ' TJS' : '';
     price.textContent = quote ? 'Ориентир от ' + quote : 'Цена по запросу';
     card.querySelector('.details').append(price);
     card.onclick = () => openProduct(product);
