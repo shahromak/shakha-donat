@@ -195,7 +195,7 @@ app.post(webhookPath, async (req, res) => {
     ? 'Открой магазин, выбери товар и отправь заявку. Её статус появится в разделе «Заказы».'
     : command === '/orders'
       ? 'История заявок доступна в разделе «Заказы» внутри магазина.'
-      : 'Привет! Это SHAKHA DONAT. Открой магазин, чтобы выбрать игру, Telegram Stars или Premium.';
+      : '⚡ Добро пожаловать в SHAKHA DONAT!\n\nПополняй игры, покупай Telegram Stars и оформляй Telegram Premium в одном магазине.\n\nНажми «Открыть магазин», выбери товар и оформи заявку. Статус можно посмотреть в разделе «Заказы».';
   try {
     await telegramCall('sendMessage', {
       chat_id:message.chat.id, text:reply,
