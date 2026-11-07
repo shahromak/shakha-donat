@@ -181,7 +181,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=6b2c1dc';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=admin-panel';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
@@ -208,7 +208,12 @@ app.post(webhookPath, async (req, res) => {
   const message = req.body?.message;
   if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
   const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
-  const reply = command === '/help'
+  const isAdmin = String(message.from?.id) === ADMIN_ID;
+  const buttons = [[{text:'Открыть магазин', web_app:{url:shopUrl}}]];
+  if (isAdmin) buttons.push([{text:'Панель администратора', web_app:{url:shopUrl + '#admin'}}]);
+  const reply = command === '/admin'
+    ? (isAdmin ? 'Панель администратора SHAKHA DONAT. Здесь можно назначать цену, проверять оплату и управлять заказами.' : 'Эта команда доступна только администратору.')
+    : command === '/help'
     ? 'Открой магазин, выбери товар и отправь заявку. Её статус появится в разделе «Заказы».'
     : command === '/orders'
       ? 'История заявок доступна в разделе «Заказы» внутри магазина.'
@@ -216,7 +221,7 @@ app.post(webhookPath, async (req, res) => {
   try {
     await telegramCall('sendMessage', {
       chat_id:message.chat.id, text:reply,
-      reply_markup:{inline_keyboard:[[{text:'Открыть магазин', web_app:{url:shopUrl}}]]}
+      reply_markup:{inline_keyboard:buttons}
     });
     return res.sendStatus(200);
   } catch {
