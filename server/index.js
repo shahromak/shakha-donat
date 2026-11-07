@@ -78,7 +78,8 @@ const products = new Map(Object.entries({
     "Благословение Луны"
   ]
 }));
-const fields = 'id, product, package, account, amount, status, price_minor, payment_reference, created_at';
+const paymentMethods = new Set(["alif","dc","eskhata","other"]);
+const fields = 'id, product, package, account, amount, status, price_minor, payment_reference, payment_method, created_at';
 const adminOnly = (req, res, next) => {
   if (req.telegramUser.id !== ADMIN_ID) return res.status(403).json({error:'Доступ только для администратора'});
   next();
@@ -93,7 +94,7 @@ function orderRoute(handler) {
         package text NOT NULL, account text NOT NULL, amount numeric(9,2),
         status text NOT NULL DEFAULT 'new', price_minor integer,
         payment_reference text, created_at timestamptz NOT NULL DEFAULT now()
-      ); CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
+      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
@@ -109,15 +110,16 @@ app.get('/api/orders', auth, orderRoute(async (req, res) => {
   res.json({orders:rows, paymentDetails:process.env.PAYMENT_DETAILS || ''});
 }));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
-  const {id, product, pack, account, amount} = req.body || {};
+  const {id, product, pack, account, amount, paymentMethod = null} = req.body || {};
   if (typeof id !== 'string' || !uuid.test(id) || !products.get(product)?.includes(pack) ||
+      (paymentMethod !== null && !paymentMethods.has(paymentMethod)) ||
       typeof account !== 'string' || !account.trim() || account.trim().length > 80 ||
       (product === 'Steam' && (typeof amount !== 'number' || amount < 0.01 || amount > 100000))) {
     return res.status(400).json({error:'Проверь товар, пакет, сумму и ID аккаунта'});
   }
   const {rows} = await database.query(
-    'INSERT INTO storefront_orders (id, customer_id, product, package, account, amount) VALUES ($1,$2,$3,$4,$5,$6) ON CONFLICT (id) DO NOTHING RETURNING id',
-    [id, req.telegramUser.id, product, pack, account.trim(), product === 'Steam' ? amount : null]
+    'INSERT INTO storefront_orders (id, customer_id, product, package, account, amount, payment_method) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING RETURNING id',
+    [id, req.telegramUser.id, product, pack, account.trim(), product === 'Steam' ? amount : null, paymentMethod]
   );
   if (!rows.length) {
     const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
