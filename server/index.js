@@ -9,8 +9,10 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(helmet());
 const defaultJson = express.json({limit:'20kb'});
+const receiptJson = express.json({limit:'4.2mb'});
 const settingsJson = express.json({limit:'240kb'});
 app.use((req,res,next) => {
+  if (req.method === 'POST' && /^\/api\/orders\/[^/]+\/payment$/.test(req.path)) return receiptJson(req,res,next);
   const parser = req.method === 'POST' && req.path === '/api/admin/settings' ? settingsJson : defaultJson;
   parser(req,res,next);
 });
@@ -99,7 +101,11 @@ function orderRoute(handler) {
         package text NOT NULL, account text NOT NULL, amount numeric(9,2),
         status text NOT NULL DEFAULT 'new', price_minor integer,
         payment_reference text, created_at timestamptz NOT NULL DEFAULT now()
-      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_details_snapshot text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE TABLE IF NOT EXISTS storefront_support (
+      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_details_snapshot text;
+      CREATE TABLE IF NOT EXISTS storefront_receipts (order_id uuid PRIMARY KEY REFERENCES storefront_orders(id),
+        mime text NOT NULL, content bytea NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+      ALTER TABLE storefront_receipts ADD COLUMN IF NOT EXISTS decision_token uuid;
+      CREATE UNIQUE INDEX IF NOT EXISTS storefront_receipt_decision ON storefront_receipts(decision_token); CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE TABLE IF NOT EXISTS storefront_support (
         id bigserial PRIMARY KEY, customer_id text NOT NULL, sender text NOT NULL,
         body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
       ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
@@ -217,17 +223,44 @@ app.get('/api/orders', auth, orderRoute(async (req, res) => {
     ...order, paymentDetails:order.status === 'awaiting_payment' ? (payment_details_snapshot || paymentInstructions(settings, order.payment_method)) : ''
   }))});
 }));
+function checkoutPrice(settings, product, pack) {
+  const price = settings.prices?.[product]?.[pack];
+  return Number.isInteger(price) && price > 0 ? price : null;
+}
+app.post('/api/orders/quote', auth, orderRoute(async (req,res) => {
+  const {product, pack, paymentMethod} = req.body || {};
+  if (!products.get(product)?.includes(pack) || !paymentMethods.has(paymentMethod)) {
+    return res.status(400).json({error:'Проверь пакет и способ оплаты'});
+  }
+  const settings = await shopSettings();
+  const priceMinor = checkoutPrice(settings, product, pack);
+  if (!priceMinor) return res.status(409).json({error:'Цена этого пакета ещё не задана. Напиши в поддержку.'});
+  if (!paymentInstructions(settings, paymentMethod)) return res.status(409).json({error:'Для выбранного банка ещё нет реквизитов'});
+  res.json({priceMinor});
+}));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
-  const {id, product, pack, account, amount, paymentMethod = null} = req.body || {};
+  const {id, product, pack, account, amount, paymentMethod = null, confirmedPriceMinor = null} = req.body || {};
   if (typeof id !== 'string' || !uuid.test(id) || !products.get(product)?.includes(pack) ||
       (paymentMethod !== null && !paymentMethods.has(paymentMethod)) ||
       typeof account !== 'string' || !account.trim() || account.trim().length > 80 ||
       (product === 'Steam' && (typeof amount !== 'number' || amount < 0.01 || amount > 100000))) {
     return res.status(400).json({error:'Проверь товар, пакет, сумму и ID аккаунта'});
   }
+  let priceMinor = null;
+  let snapshot = null;
+  if (confirmedPriceMinor !== null) {
+    const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
+    if (existing.rowCount) return res.json({id});
+    const settings = await shopSettings();
+    priceMinor = checkoutPrice(settings, product, pack);
+    snapshot = paymentInstructions(settings, paymentMethod);
+    if (!priceMinor || priceMinor !== confirmedPriceMinor || !paymentMethods.has(paymentMethod) || !snapshot) {
+      return res.status(409).json({error:'Цена или реквизиты изменились. Открой оформление заново.'});
+    }
+  }
   const {rows} = await database.query(
-    'INSERT INTO storefront_orders (id, customer_id, product, package, account, amount, payment_method) VALUES ($1,$2,$3,$4,$5,$6,$7) ON CONFLICT (id) DO NOTHING RETURNING id',
-    [id, req.telegramUser.id, product, pack, account.trim(), product === 'Steam' ? amount : null, paymentMethod]
+    'INSERT INTO storefront_orders (id, customer_id, product, package, account, amount, payment_method, status, price_minor, payment_details_snapshot) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING RETURNING id',
+    [id, req.telegramUser.id, product, pack, account.trim(), product === 'Steam' ? amount : null, paymentMethod, priceMinor ? 'awaiting_payment' : 'new', priceMinor, snapshot]
   );
   if (!rows.length) {
     const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
@@ -241,7 +274,7 @@ app.post('/api/orders', auth, orderRoute(async (req, res) => {
       'Код заказа: ' + id,
       'Товар: ' + product,
       'Пакет: ' + (product === 'Steam' ? amount + ' TJS' : pack),
-      'Статус: новая заявка',
+      priceMinor ? 'Статус: ожидает оплаты' : 'Статус: новая заявка',
       '',
       'Проверить статус можно в разделе «Заказы».'
     ];
@@ -264,29 +297,41 @@ app.post('/api/orders/:id/method', auth, orderRoute(async (req,res) => {
   if (!result.rowCount) return res.status(409).json({error:'Способ оплаты уже нельзя изменить'});
   res.json({ok:true});
 }));
+function decodeReceipt(value) {
+  if (typeof value !== 'string' || value.length > 4194304 || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) return null;
+  const content = Buffer.from(value, 'base64');
+  if (content.toString('base64') !== value || content.length > 3145728) return null;
+  if (content.subarray(0,5).toString() === '%PDF-') return {content,mime:'application/pdf'};
+  if (content.subarray(0,8).toString('hex') === '89504e470d0a1a0a') return {content,mime:'image/png'};
+  if (content.subarray(0,3).toString('hex') === 'ffd8ff') return {content,mime:'image/jpeg'};
+  return null;
+}
 app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
-  const reference = req.body?.reference;
-  if (!uuid.test(req.params.id) || typeof reference !== 'string' || !reference.trim() || reference.trim().length > 120) {
-    return res.status(400).json({error:'Укажи номер банковской операции'});
-  }
-
-  const {rows} = await database.query(
-    "SELECT payment_method,payment_details_snapshot FROM storefront_orders WHERE id=$1 AND customer_id=$2 AND status='awaiting_payment'",
-    [req.params.id,req.telegramUser.id]
-  );
-  const order = rows[0];
-  if (!order || !(order.payment_details_snapshot || paymentInstructions(await shopSettings(), order.payment_method))) {
-    return res.status(409).json({error:'Заказ пока недоступен для оплаты'});
-  }
-  const result = await database.query(
-    "UPDATE storefront_orders SET payment_reference=$1, status='review' WHERE id=$2 AND customer_id=$3 AND status='awaiting_payment' AND payment_method IS NOT DISTINCT FROM $4",
-    [reference.trim(), req.params.id, req.telegramUser.id, order.payment_method]
-  );
-  if (!result.rowCount) return res.status(409).json({error:'Заявка недоступна для подтверждения оплаты'});
+  const receipt = decodeReceipt(req.body?.receipt);
+  if (!uuid.test(req.params.id) || !receipt) return res.status(400).json({error:'Загрузи чек JPG, PNG или PDF до 3 МБ'});
+  const decisionToken = crypto.randomUUID();
+  const result = await database.query(`WITH changed AS (
+    UPDATE storefront_orders SET status='review', payment_reference=NULL
+    WHERE id=$1 AND customer_id=$2 AND status='awaiting_payment' AND price_minor > 0
+      AND payment_details_snapshot <> '' AND payment_method IS NOT DISTINCT FROM $5
+    RETURNING id,product,package,account,amount,price_minor,payment_method
+  ), saved AS (
+    INSERT INTO storefront_receipts (order_id,mime,content,decision_token) SELECT id,$3,$4,$6 FROM changed
+    ON CONFLICT (order_id) DO UPDATE SET mime=EXCLUDED.mime,content=EXCLUDED.content,decision_token=EXCLUDED.decision_token,created_at=now()
+  ) SELECT * FROM changed`, [req.params.id,req.telegramUser.id,receipt.mime,receipt.content,req.body?.paymentMethod ?? null,decisionToken]);
+  const order = result.rows[0];
+  if (!order) return res.status(409).json({error:'Заказ уже отправлен на проверку или способ оплаты изменился. Обнови историю.'});
   res.json({ok:true});
+  if (BOT_TOKEN) void notifyReceipt(order, decisionToken).catch(() => console.warn('SHAKHA DONAT: receipt notification not delivered'));
+}));
+app.get('/api/admin/orders/:id/receipt', auth, adminOnly, orderRoute(async (req,res) => {
+  if (!uuid.test(req.params.id)) return res.sendStatus(400);
+  const {rows} = await database.query('SELECT mime,content FROM storefront_receipts WHERE order_id=$1', [req.params.id]);
+  if (!rows[0]) return res.sendStatus(404);
+  res.json({mime:rows[0].mime,receipt:rows[0].content.toString('base64')});
 }));
 app.get('/api/admin/orders', auth, adminOnly, orderRoute(async (_req, res) => {
-  const {rows} = await database.query('SELECT ' + fields + ', customer_id FROM storefront_orders ORDER BY created_at DESC LIMIT 100');
+  const {rows} = await database.query('SELECT ' + fields + ', customer_id, EXISTS (SELECT 1 FROM storefront_receipts r WHERE r.order_id=storefront_orders.id) AS has_receipt FROM storefront_orders ORDER BY created_at DESC LIMIT 100');
   res.json({orders:rows});
 }));
 app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) => {
@@ -318,7 +363,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=payment-fix';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=receipt-checkout';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
@@ -336,11 +381,47 @@ async function telegramCall(method, body = {}) {
   return result.result;
 }
 
+async function notifyReceipt(order, decisionToken) {
+  await telegramCall('sendMessage', {
+    chat_id:ADMIN_ID,
+    text:[
+      '🧾 Чек на проверку', 'Заказ: ' + order.id,
+      'Товар: ' + order.product + ' · ' + (order.amount ? order.amount + ' TJS' : order.package),
+      'Получатель: ' + order.account, 'Сумма: ' + (order.price_minor / 100).toFixed(2) + ' TJS'
+    ].join('\n'),
+    reply_markup:{inline_keyboard:[
+      [{text:'Открыть чек в админке',web_app:{url:shopUrl + '#admin'}}],
+      [{text:'Подтвердить',callback_data:'pay:yes:' + decisionToken},{text:'Отклонить',callback_data:'pay:no:' + decisionToken}]
+    ]}
+  });
+}
+async function handleReceiptDecision(query) {
+  const match = /^pay:(yes|no):(.+)$/.exec(query.data || '');
+  if (String(query.from?.id) !== ADMIN_ID || !match || !uuid.test(match[2]) || !database) {
+    await telegramCall('answerCallbackQuery', {callback_query_id:query.id,text:'Нет доступа или заказ недоступен'});
+    return;
+  }
+  const approved = match[1] === 'yes';
+  const {rowCount} = await database.query(
+    "UPDATE storefront_orders SET status=$1 WHERE status='review' AND id=(SELECT order_id FROM storefront_receipts WHERE decision_token=$2)",
+    [approved ? 'paid' : 'awaiting_payment',match[2]]
+  );
+  await telegramCall('answerCallbackQuery', {callback_query_id:query.id,text:rowCount ? (approved ? 'Оплата подтверждена' : 'Чек отклонён. Можно загрузить новый.') : 'Заказ уже обработан'});
+  if (rowCount && query.message) await telegramCall('editMessageReplyMarkup', {
+    chat_id:query.message.chat.id,message_id:query.message.message_id,
+    reply_markup:{inline_keyboard:[[{text:'Открыть заказ',web_app:{url:shopUrl + '#admin'}}]]}
+  }).catch(() => {});
+}
 app.post(webhookPath, async (req, res) => {
   const supplied = Buffer.from(req.get('X-Telegram-Bot-Api-Secret-Token') || '');
   const expected = Buffer.from(webhookSecret);
   if (!expected.length || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
     return res.sendStatus(403);
+  }
+  if (req.body?.callback_query) {
+    try { await handleReceiptDecision(req.body.callback_query); }
+    catch { console.warn('SHAKHA DONAT: receipt decision failed'); }
+    return res.sendStatus(200);
   }
   const message = req.body?.message;
   if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
@@ -384,7 +465,7 @@ async function connectTelegramBot() {
     }
     await telegramCall('setWebhook', {
       url:botOrigin + webhookPath, secret_token:webhookSecret,
-      allowed_updates:['message']
+      allowed_updates:['message','callback_query']
     });
     console.log('SHAKHA DONAT: Telegram webhook registered');
   } catch (error) {
