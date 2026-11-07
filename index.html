@@ -129,13 +129,21 @@ button:disabled{opacity:.55;cursor:not-allowed}
 [data-shop-theme=light] .pay-card:has(input:checked),[data-shop-theme=light] .pack-tile[aria-pressed=true]{background:#e7f1ff;border-color:#397adc}
 [data-shop-theme=light] :is(.hero,.cover){color:#fff}
 [data-shop-theme=light] :is(#admin-dialog,#history,#cart-dialog) article button{background:#e9f2ff;color:#163b75;border-color:#acc6eb}[data-shop-theme=light] :is(#admin-dialog,#history,#cart-dialog) article button:not(:disabled):hover{background:#d7e8ff}[data-shop-theme=light] .profile-link-icon{background:#e5efff;color:#205ab4}
+
+#settings-dialog{width:min(560px,94vw);max-height:88dvh;overflow:auto;border-radius:20px;background:#152238;color:#f4f7ff;border:1px solid var(--edge)}
+#settings-form[hidden],.shop-banner[hidden],#open-settings[hidden]{display:none}
+#settings-form details{border:1px solid var(--edge);border-radius:12px;margin:8px 0;padding:12px}
+#settings-form summary{cursor:pointer;font-weight:700}
+#settings-form textarea{width:100%;padding:10px;font:inherit;color:inherit;background:#0f1a2b;border:1px solid var(--edge);border-radius:10px}
+.shop-banner{margin:12px 0;padding:13px 16px;white-space:pre-wrap;overflow-wrap:anywhere;background:#183457;border:1px solid #426895;border-radius:14px;color:#e2eeff}
+[data-shop-theme=light] #settings-dialog,[data-shop-theme=light] #settings-form :is(input,textarea){background:#fff;color:#152748}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
 <body>
 <header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><div class="shop-actions"><button id="open-cart"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>Корзина <span id="cart-count">0</span></button><button id="orders">Мои заказы <span id="count">0</span></button></div></header>
 <main id="storefront">
-<section class="hero">
+<aside id="shop-banner" class="shop-banner" aria-label="Объявление магазина" hidden></aside><section class="hero">
 <div class="hero-copy"><div class="eyebrow">ИГРЫ / TELEGRAM / STEAM</div><h1>Пополнение<br><span>в пару шагов.</span></h1><p>Игровая валюта, Telegram Stars и Premium в одном каталоге.</p><a class="primary cta" href="#catalog">Открыть каталог ↗</a></div>
 <svg class="art" viewBox="0 0 560 390" aria-hidden="true">
 <defs><linearGradient id="shell" x2=".8" y2="1"><stop stop-color="#f3e5ff"/><stop offset=".56" stop-color="#bb9af0"/><stop offset="1" stop-color="#7251ad"/></linearGradient><linearGradient id="side" x2="0" y2="1"><stop stop-color="#9469df"/><stop offset="1" stop-color="#301945"/></linearGradient><path id="pad" d="M122 111q23-30 76-19l50 12h67l53-12q51-11 74 19 29 37 48 127 12 55-20 66-26 9-54-26l-45-55q-13-16-35-16H224q-22 0-35 16l-45 55q-28 35-54 26-32-11-20-66 19-90 52-127Z"/></defs>
@@ -173,6 +181,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <a id="telegram-open-bot" class="cta primary" href="https://t.me/ShakhaDonatBot">Открыть в Telegram</a>
 <button id="telegram-login" hidden>Повторить вход</button>
 <button id="admin-orders" hidden>Панель администратора</button>
+<button id="open-settings" hidden>Настройки магазина</button>
 </section></main>
 <nav class="store-nav" aria-label="Меню магазина">
 <a href="#"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10H15v-6H9v6H3z"/></svg>Главная</a>
@@ -197,6 +206,10 @@ button:disabled{opacity:.55;cursor:not-allowed}
   </div>
 </dialog>
 <dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8zM11 13 21 3"/></svg>Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
+<dialog id="settings-dialog" aria-labelledby="settings-title"><button class="close" aria-label="Закрыть">×</button><h2 id="settings-title">Настройки магазина</h2><p id="settings-status" class="note" role="status"></p><form id="settings-form" hidden>
+<h3>Цены пакетов</h3><p class="note">Укажи сумму в сомони. Пустое поле оставляет прежний ориентир или цену по запросу.</p><div id="settings-prices"></div>
+<h3>Реквизиты для перевода</h3><p class="note">Покупатель увидит реквизиты своего банка после назначения цены заказа.</p><div id="settings-payments"></div>
+<label><span>Баннер на главной</span><textarea id="settings-banner" rows="3" maxlength="300" placeholder="Акция или объявление"></textarea></label><p class="note">Очисти поле, чтобы скрыть баннер.</p><button id="settings-save" class="primary" type="submit">Опубликовать настройки</button></form></dialog>
 <script>
 const products = [
   ["PUBG Mobile","Игровая валюта UC","PUBG","#b08038","game",["60 UC","325 UC","660 UC","1800 UC"]],
@@ -245,8 +258,106 @@ const referencePrices = {
   }
 };
 const formatQuote = new Intl.NumberFormat('ru', {maximumFractionDigits:2});
+
+let managedPrices = {};
+let settingsLoading = false;
+async function refreshShopSettings() {
+  try {
+    const response = await fetch('https://shakha-donat-api-v2.onrender.com/api/shop/settings', {
+      cache:'no-store', signal:AbortSignal.timeout(12000)
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    managedPrices = data.prices || {};
+    const banner = $('#shop-banner');
+    banner.textContent = data.banner || '';
+    banner.hidden = !data.banner;
+    renderCatalog();
+    if ($('#checkout').open && selectedProduct) renderPackages(selectedProduct);
+  } catch {}
+}
+function settingField(label, input) {
+  const row = document.createElement('label');
+  const title = document.createElement('span');
+  title.textContent = label;
+  row.append(title, input);
+  return row;
+}
+function fillShopSettings({settings, catalog, methods}) {
+  $('#settings-banner').value = settings.banner || '';
+  const groups = Object.entries(catalog).filter(([name]) => name !== 'Steam').map(([name, packs]) => {
+    const group = document.createElement('details');
+    const title = document.createElement('summary');
+    title.textContent = name;
+    group.append(title);
+    for (const pack of packs) {
+      const input = document.createElement('input');
+      input.type = 'number';
+      input.inputMode = 'decimal';
+      input.min = '0.01';
+      input.max = '100000';
+      input.step = '0.01';
+      input.placeholder = 'По запросу';
+      input.dataset.product = name;
+      input.dataset.pack = pack;
+      const minor = settings.prices?.[name]?.[pack];
+      if (minor) input.value = (minor / 100).toFixed(2);
+      group.append(settingField(pack + ' · TJS', input));
+    }
+    return group;
+  });
+  $('#settings-prices').replaceChildren(...groups);
+  $('#settings-payments').replaceChildren(...methods.map(method => {
+    const input = document.createElement('textarea');
+    input.dataset.method = method;
+    input.rows = 3;
+    input.maxLength = 1200;
+    input.value = settings.payments?.[method] || '';
+    return settingField(paymentNames[method] || method, input);
+  }));
+}
+async function openShopSettings() {
+  const dialog = $('#settings-dialog');
+  if (!dialog.open) dialog.showModal();
+  if (settingsLoading) return;
+  settingsLoading = true;
+  $('#settings-form').hidden = true;
+  $('#settings-status').textContent = 'Загрузка…';
+  try {
+    fillShopSettings(await api('/admin/settings'));
+    $('#settings-form').hidden = false;
+    $('#settings-status').textContent = '';
+  } catch (error) {
+    $('#settings-status').textContent = error.message;
+  } finally {
+    settingsLoading = false;
+  }
+}
+$('#open-settings').onclick = openShopSettings;
+$('#settings-form').onsubmit = async event => {
+  event.preventDefault();
+  const button = $('#settings-save');
+  if (button.disabled) return;
+  const prices = {};
+  const payments = {};
+  for (const input of document.querySelectorAll('#settings-prices input')) {
+    if (input.value) (prices[input.dataset.product] ??= {})[input.dataset.pack] = Math.round(input.valueAsNumber * 100);
+  }
+  for (const input of document.querySelectorAll('#settings-payments textarea')) {
+    payments[input.dataset.method] = input.value.trim();
+  }
+  button.disabled = true;
+  try {
+    await api('/admin/settings', {prices,payments,banner:$('#settings-banner').value});
+    $('#settings-status').textContent = 'Настройки опубликованы.';
+    await refreshShopSettings();
+  } catch (error) {
+    $('#settings-status').textContent = error.message;
+  } finally { button.disabled = false; }
+};
+
 function referencePrice(product, pack) {
-  const minor = referencePrices[product]?.[pack];
+  const minor = managedPrices[product]?.[pack] ?? referencePrices[product]?.[pack];
   return minor ? formatQuote.format(minor / 100) + ' TJS' : '';
 }
 function renderPackages(product) {
@@ -315,7 +426,7 @@ function renderCatalog() {
     card.querySelector('.details small').textContent = description;
     const price = document.createElement('small');
     price.className = 'catalog-price';
-    const amounts = Object.values(referencePrices[name] || {});
+    const amounts = Object.values({...referencePrices[name], ...managedPrices[name]});
     const quote = amounts.length ? formatQuote.format(Math.min(...amounts) / 100) + ' TJS' : '';
     price.textContent = quote ? 'Ориентир от ' + quote : 'Цена по запросу';
     card.querySelector('.details').append(price);
@@ -495,7 +606,8 @@ function orderRow(order, paymentDetails, admin) {
       await loadOrders(true);
     };
     if (order.status === 'new') addAction(actions, 'Назначить цену', async () => {
-      const price = prompt('Сумма в сомони');
+      const suggested = managedPrices[order.product]?.[order.package];
+      const price = prompt('Сумма в сомони', suggested ? (suggested / 100).toFixed(2) : '');
       if (price === null) return;
       const value = price.trim().replace(',', '.');
       if (!/^\d+(\.\d{1,2})?$/.test(value) || Number(value) <= 0) throw new Error('Введи сумму больше нуля, максимум два знака после запятой.');
@@ -522,7 +634,7 @@ async function loadOrders(admin) {
   try {
     const data = await api(admin ? '/admin/orders' : '/orders');
     if (request !== historyRequest) return;
-    target.replaceChildren(...data.orders.map(order => orderRow(order, data.paymentDetails, admin)));
+    target.replaceChildren(...data.orders.map(order => orderRow(order, order.paymentDetails ?? data.paymentDetails, admin)));
     if (!data.orders.length) target.textContent = 'Заказов пока нет.';
   } catch (error) {
     if (request === historyRequest) target.textContent = error.message;
@@ -579,6 +691,8 @@ async function checkTelegram() {
     $('#telegram-status').textContent = '✓ Аккаунт подтверждён через Telegram.';
     button.hidden = true;
     $('#admin-orders').hidden = !isAdmin;
+    $('#open-settings').hidden = !isAdmin;
+    if (isAdmin && location.hash === '#manage') openShopSettings();
     if (isAdmin && location.hash === '#admin') $('#admin-orders').click();
   } catch (error) {
     $('#telegram-status').textContent = error.message;
@@ -676,7 +790,7 @@ $('#send-cart').onclick = async () => {
 };
 renderCart();
 function showScreen() {
-  const profile = ['#profile','#admin'].includes(location.hash);
+  const profile = ['#profile','#admin','#manage'].includes(location.hash);
   $('#storefront').hidden = profile;
   $('#profile-screen').hidden = !profile;
   if (profile) {
@@ -763,6 +877,7 @@ for (const key of ['language','theme']) {
   };
 }
 applyAppearance();
+void refreshShopSettings();
 </script>
 </body>
 </html>
