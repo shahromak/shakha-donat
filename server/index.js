@@ -99,7 +99,12 @@ function orderRoute(handler) {
         package text NOT NULL, account text NOT NULL, amount numeric(9,2),
         status text NOT NULL DEFAULT 'new', price_minor integer,
         payment_reference text, created_at timestamptz NOT NULL DEFAULT now()
-      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
+      ); ALTER TABLE storefront_orders ADD COLUMN IF NOT EXISTS payment_method text; CREATE TABLE IF NOT EXISTS storefront_settings (id integer PRIMARY KEY, data jsonb NOT NULL); CREATE TABLE IF NOT EXISTS storefront_support (
+        id bigserial PRIMARY KEY, customer_id text NOT NULL, sender text NOT NULL,
+        body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
+      ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
+      CREATE TABLE IF NOT EXISTS storefront_operator_presence (id integer PRIMARY KEY, seen_at timestamptz NOT NULL);
+      CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
@@ -117,6 +122,66 @@ async function shopSettings() {
 function paymentInstructions(settings, method) {
   return settings.payments?.[method] || process.env.PAYMENT_DETAILS || '';
 }
+
+const supportOfflineReply = 'Сообщение получено. Сейчас оператор не в сети. Ответим здесь, как только сможем.';
+async function supportMessages(customer, connection = database) {
+  const {rows} = await connection.query(
+    'SELECT id, sender, body, created_at FROM storefront_support WHERE customer_id=$1 ORDER BY id DESC LIMIT 100',
+    [customer]
+  );
+  return rows.reverse();
+}
+async function operatorOnline(connection = database) {
+  const {rows} = await connection.query("SELECT 1 FROM storefront_operator_presence WHERE id=1 AND seen_at > now() - interval '45 seconds'");
+  return rows.length > 0;
+}
+const supportBody = req => typeof req.body?.message === 'string' ? req.body.message.trim() : '';
+app.get('/api/support', auth, orderRoute(async (req, res) => {
+  res.json({messages:await supportMessages(req.telegramUser.id), online:await operatorOnline()});
+}));
+app.post('/api/support', auth, orderRoute(async (req, res) => {
+  const message = supportBody(req);
+  if (!message || message.length > 1500) return res.status(400).json({error:'Введи сообщение до 1500 символов'});
+  const customer = req.telegramUser.id;
+  const client = await database.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1)::bigint)', ['support:' + customer]);
+    const online = await operatorOnline(client);
+    const {rows} = await client.query(
+      "SELECT sender FROM storefront_support WHERE customer_id=$1 AND sender IN ('operator','auto') ORDER BY id DESC LIMIT 1", [customer]
+    );
+    await client.query("INSERT INTO storefront_support (customer_id,sender,body) VALUES ($1,'customer',$2)", [customer,message]);
+    if (!online && rows[0]?.sender !== 'auto') {
+      await client.query("INSERT INTO storefront_support (customer_id,sender,body) VALUES ($1,'auto',$2)", [customer,supportOfflineReply]);
+    }
+    await client.query('COMMIT');
+    res.status(201).json({ok:true});
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {client.release();}
+}));
+app.get('/api/admin/support', auth, adminOnly, orderRoute(async (_req, res) => {
+  await database.query('INSERT INTO storefront_operator_presence (id,seen_at) VALUES (1,now()) ON CONFLICT (id) DO UPDATE SET seen_at=now()');
+  const {rows} = await database.query(`SELECT DISTINCT ON (customer_id) customer_id, sender, body, created_at, id
+    FROM storefront_support WHERE sender <> 'auto' ORDER BY customer_id, id DESC`);
+  rows.sort((a,b) => Number(b.id) - Number(a.id));
+  res.json({threads:rows.slice(0,100)});
+}));
+app.get('/api/admin/support/:customer', auth, adminOnly, orderRoute(async (req, res) => {
+  if (!/^\d{1,20}$/.test(req.params.customer)) return res.sendStatus(400);
+  res.json({messages:await supportMessages(req.params.customer)});
+}));
+app.post('/api/admin/support/:customer', auth, adminOnly, orderRoute(async (req, res) => {
+  const message = supportBody(req);
+  const customer = req.params.customer;
+  if (!/^\d{1,20}$/.test(customer) || !message || message.length > 1500) return res.status(400).json({error:'Проверь сообщение'});
+  const result = await database.query(`INSERT INTO storefront_support (customer_id,sender,body)
+    SELECT $1,'operator',$2 WHERE EXISTS (SELECT 1 FROM storefront_support WHERE customer_id=$1 AND sender='customer')`, [customer,message]);
+  if (!result.rowCount) return res.sendStatus(404);
+  res.status(201).json({ok:true});
+}));
 app.get('/api/shop/settings', orderRoute(async (_req, res) => {
   const {prices, banner, bannerImage = ''} = await shopSettings();
   res.json({prices, banner, bannerImage});
@@ -227,7 +292,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=banner-photo';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=support';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
