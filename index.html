@@ -58,11 +58,12 @@ article{background:#0c1729}label[hidden]{display:none}
 @keyframes auth-float{50%{transform:translateY(-5px) rotate(-5deg)}}
 @keyframes auth-scan{to{transform:translateX(128%)}}
 @media(prefers-reduced-motion:reduce){.auth-ring,.auth-bolt,.auth-track i{animation:none}}
+.shop-actions,.cart-actions{display:flex;gap:8px;flex-wrap:wrap}.cart-actions{margin-top:12px}.cart-row{display:grid;gap:8px}.cart-row button{justify-self:start}#cart-count{color:#ffbc62}@media(max-width:560px){.shop-actions{gap:4px;justify-content:flex-end}.shop-actions button{font-size:11px;padding:6px 8px}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
 <body>
-<header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><button id="orders">Мои заказы <span id="count">0</span></button></header>
+<header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><div class="shop-actions"><button id="open-cart">Корзина <span id="cart-count">0</span></button><button id="orders">Мои заказы <span id="count">0</span></button></div></header>
 <main>
 <section class="hero">
 <div class="hero-copy"><div class="eyebrow">ИГРЫ / TELEGRAM / STEAM</div><h1>Пополнение<br><span>в пару шагов.</span></h1><p>Игровая валюта, Telegram Stars и Premium в одном каталоге.</p><a class="primary cta" href="#catalog">Открыть каталог ↗</a></div>
@@ -92,7 +93,7 @@ article{background:#0c1729}label[hidden]{display:none}
 </section>
 </main>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="button" id="add-cart">В корзину</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
@@ -103,6 +104,7 @@ article{background:#0c1729}label[hidden]{display:none}
     <div class="auth-track" aria-hidden="true"><i></i></div>
   </div>
 </dialog>
+<dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary">Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
 <script>
 const products = [
   ['PUBG Mobile','Игровая валюта UC','PUBG','#b08038','game',['60 UC','325 UC','660 UC','1800 UC']],
@@ -388,6 +390,93 @@ async function checkTelegram() {
     button.disabled = false;
   }
 }
+const cartKey = 'shakha-cart-v1';
+let cart = [];
+let sendingCart = false;
+try {
+  const storedCart = JSON.parse(localStorage.getItem(cartKey));
+  if (Array.isArray(storedCart)) cart = storedCart;
+} catch {}
+function saveCart(next) {
+  localStorage.setItem(cartKey, JSON.stringify(next));
+  cart = next;
+  renderCart();
+}
+function renderCart() {
+  $('#cart-count').textContent = cart.length;
+  $('#send-cart').disabled = sendingCart || !cart.length;
+  const list = $('#cart-items');
+  list.replaceChildren();
+  if (!cart.length) list.textContent = 'Корзина пока пуста.';
+  for (const item of cart) {
+    const row = document.createElement('article');
+    row.className = 'cart-row';
+    const title = document.createElement('strong');
+    title.textContent = item.product + ' · ' + (item.amount ? item.amount + ' TJS' : item.pack);
+    const account = document.createElement('span');
+    account.className = 'note';
+    account.textContent = item.account;
+    const remove = document.createElement('button');
+    remove.textContent = 'Удалить';
+    remove.disabled = sendingCart;
+    remove.onclick = () => {
+      try { saveCart(cart.filter(entry => entry.id !== item.id)); }
+      catch { $('#cart-status').textContent = 'Не удалось обновить корзину.'; }
+    };
+    row.append(title, account, remove);
+    list.append(row);
+  }
+}
+$('#open-cart').onclick = () => {
+  renderCart();
+  if (!sendingCart) $('#cart-status').textContent = '';
+  $('#cart-dialog').showModal();
+};
+$('#add-cart').onclick = () => {
+  if (!$('#form').reportValidity()) return;
+  const account = $('#account').value.trim();
+  if (!account) {
+    $('#result').textContent = 'Введи ID или имя пользователя.';
+    return;
+  }
+  try {
+    saveCart([...cart, {
+      id:crypto.randomUUID(), product:selectedProduct[0], pack:$('#package').value,
+      account, amount:$('#amount').disabled ? null : Number($('#amount').value)
+    }]);
+  } catch {
+    $('#result').textContent = 'Не удалось сохранить товар в корзине.';
+    return;
+  }
+  $('#checkout').close();
+  $('#open-cart').click();
+};
+$('#send-cart').onclick = async () => {
+  if (sendingCart || !cart.length) return;
+  sendingCart = true;
+  $('#add-cart').disabled = true;
+  renderCart();
+  let sent = 0;
+  try {
+    for (const item of [...cart]) {
+      $('#cart-status').textContent = 'Отправляем ' + item.product + '…';
+      await api('/orders', item);
+      saveCart(cart.filter(entry => entry.id !== item.id));
+      sent++;
+    }
+    if ($('#cart-dialog').open) {
+      $('#cart-dialog').close();
+      showHistory();
+    }
+  } catch (error) {
+    $('#cart-status').textContent = 'Отправлено заявок: ' + sent + '. ' + error.message;
+  } finally {
+    sendingCart = false;
+    $('#add-cart').disabled = false;
+    renderCart();
+  }
+};
+renderCart();
 $('#telegram-login').onclick = checkTelegram;
 document.addEventListener('DOMContentLoaded', () => {
   telegram = window.Telegram?.WebApp;
