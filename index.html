@@ -165,6 +165,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .pack-bonus{color:#ffd678;font-weight:800}[data-shop-theme=light] .pack-bonus{color:#815600}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+<link rel="stylesheet" href="catalog-covers.css?v=1">
 </head>
 <body>
 <header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><div class="shop-actions"><button id="open-cart"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>Корзина <span id="cart-count">0</span></button><button id="orders">Мои заказы <span id="count">0</span></button></div></header>
@@ -556,6 +557,7 @@ function openProduct(product, draft) {
 document.querySelectorAll('[data-feature]').forEach(button => {
   button.onclick = () => openProduct(products.find(product => product[0] === button.dataset.feature));
 });
+const coverIndex = new Map(['PUBG Mobile','Free Fire','Roblox','Telegram Stars','Telegram Premium','Steam','Mobile Legends','Genshin Impact'].map((name,index) => [name,index]));
 function renderCatalog() {
   const term = $('#search').value.trim().toLowerCase();
   const matches = products.filter(product => (category === 'all' || product[4] === category) && product.slice(0, 2).join(' ').toLowerCase().includes(term));
@@ -564,7 +566,9 @@ function renderCatalog() {
     const card = document.createElement('button');
     card.className = 'card';
     card.innerHTML = '<div class="cover"><small></small><span aria-hidden="true"></span></div><div class="details"><b><span></span><span class="arrow" aria-hidden="true">↗</span></b><small></small></div>';
-    card.querySelector('.cover').style.setProperty('--accent', accent);
+    const cover = card.querySelector('.cover');
+    cover.style.setProperty('--accent', accent);
+    if (coverIndex.has(name)) cover.dataset.cover = String(coverIndex.get(name));
     card.querySelector('.cover small').textContent = {game:'ИГРА', telegram:'TELEGRAM', platform:'ПЛАТФОРМА'}[group];
     card.querySelector('.cover span').textContent = mark;
     card.querySelector('.details b span').textContent = name;
