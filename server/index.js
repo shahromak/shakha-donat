@@ -68,17 +68,7 @@ const products = new Map(Object.entries({
   "Steam": [
     "Указать сумму"
   ],
-  "Mobile Legends": [
-    "68 алмазов",
-    "135 алмазов",
-    "160 алмазов",
-    "225 алмазов",
-    "265 алмазов",
-    "275 алмазов",
-    "86 алмазов",
-    "172 алмаза",
-    "257 алмазов"
-  ],
+  "Mobile Legends": ["68 алмазов","135 алмазов","160 алмазов","225 алмазов","265 алмазов","275 алмазов","325 алмазов","390 алмазов","650 алмазов","970 алмазов","1290 алмазов","1775 алмазов","2600 алмазов","6400 алмазов","86 алмазов","172 алмаза","257 алмазов"],
   "Genshin Impact": [
     "60 кристаллов",
     "330 кристаллов",
@@ -110,7 +100,15 @@ function orderRoute(handler) {
         body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
       ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
       CREATE TABLE IF NOT EXISTS storefront_operator_presence (id integer PRIMARY KEY, seen_at timestamptz NOT NULL);
-      CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC)`)
+      CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC); CREATE TABLE IF NOT EXISTS storefront_catalog_migrations (name text PRIMARY KEY);
+      WITH first_run AS (
+        INSERT INTO storefront_catalog_migrations(name) VALUES ('ml-tjs-2026-11-08') ON CONFLICT DO NOTHING RETURNING name
+      )
+      INSERT INTO storefront_settings(id,data)
+        SELECT 1, '{"prices":{"Mobile Legends":{"68 алмазов":1368,"135 алмазов":2728,"160 алмазов":3090,"225 алмазов":4679,"265 алмазов":5248,"275 алмазов":5478,"325 алмазов":6338,"390 алмазов":5961,"650 алмазов":12615,"970 алмазов":18544,"1290 алмазов":24722,"1775 алмазов":33332,"2600 алмазов":50454,"6400 алмазов":131132}},"payments":{},"banner":""}'::jsonb FROM first_run
+      ON CONFLICT (id) DO UPDATE SET data=jsonb_set(storefront_settings.data,'{prices}',
+        COALESCE(storefront_settings.data->'prices','{}'::jsonb) || jsonb_build_object('Mobile Legends',
+          COALESCE(storefront_settings.data->'prices'->'Mobile Legends','{}'::jsonb) || EXCLUDED.data->'prices'->'Mobile Legends'))`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
@@ -394,7 +392,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=stars-checkout';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=ml-prices';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
