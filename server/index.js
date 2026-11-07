@@ -162,4 +162,75 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 }));
 
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
-const port=Number(process.env.PORT)||3000;app.listen(port,'0.0.0.0',()=>console.log('SHAKHA DONAT API listening on '+port));
+
+const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/';
+const webhookPath = '/telegram/webhook';
+const webhookSecret = BOT_TOKEN
+  ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
+  : '';
+
+async function telegramCall(method, body = {}) {
+  const response = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/' + method, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body),
+    signal:AbortSignal.timeout(8000)
+  });
+  const result = await response.json();
+  if (!response.ok || !result.ok) throw new Error('Telegram rejected ' + method);
+  return result.result;
+}
+
+app.post(webhookPath, async (req, res) => {
+  const supplied = Buffer.from(req.get('X-Telegram-Bot-Api-Secret-Token') || '');
+  const expected = Buffer.from(webhookSecret);
+  if (!expected.length || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected)) {
+    return res.sendStatus(403);
+  }
+  const message = req.body?.message;
+  if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
+  const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
+  const reply = command === '/help'
+    ? 'Открой магазин, выбери товар и отправь заявку. Её статус появится в разделе «Заказы».'
+    : command === '/orders'
+      ? 'История заявок доступна в разделе «Заказы» внутри магазина.'
+      : 'Привет! Это SHAKHA DONAT. Открой магазин, чтобы выбрать игру, Telegram Stars или Premium.';
+  try {
+    await telegramCall('sendMessage', {
+      chat_id:message.chat.id, text:reply,
+      reply_markup:{inline_keyboard:[[{text:'Открыть магазин', web_app:{url:shopUrl}}]]}
+    });
+    return res.sendStatus(200);
+  } catch {
+    console.warn('SHAKHA DONAT: could not deliver Telegram reply');
+    return res.sendStatus(502);
+  }
+});
+
+async function connectTelegramBot() {
+  if (process.env.RENDER_EXTERNAL_URL !== botOrigin) return;
+  if (!BOT_TOKEN) {
+    console.warn('SHAKHA DONAT: Telegram bot token is not configured');
+    return;
+  }
+  try {
+    const me = await telegramCall('getMe');
+    if (me.username?.toLowerCase() !== 'shakhadonatbot') {
+      console.warn('SHAKHA DONAT: configured Telegram token belongs to a different bot');
+      return;
+    }
+    await telegramCall('setWebhook', {
+      url:botOrigin + webhookPath, secret_token:webhookSecret,
+      allowed_updates:['message']
+    });
+    console.log('SHAKHA DONAT: Telegram webhook registered');
+  } catch {
+    console.warn('SHAKHA DONAT: Telegram webhook registration failed');
+  }
+}
+
+const port=Number(process.env.PORT)||3000;app.listen(port,'0.0.0.0',()=>{
+  console.log('SHAKHA DONAT API listening on '+port);
+  void connectTelegramBot();
+});
