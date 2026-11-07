@@ -40,6 +40,24 @@ article{background:#0c1729}label[hidden]{display:none}
 .faq{margin:28px 0}.faq details{border-bottom:1px solid var(--edge);padding:13px 0}.faq summary{cursor:pointer;font-weight:650}.faq p{margin:8px 0 0}
 .draft-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}.draft-actions button{padding:6px 9px;font-size:12px}
 @media(max-width:560px){header{height:66px}.hero{min-height:422px}.hero h1{font-size:43px}.art{right:-6px}.featured{gap:8px;margin-bottom:27px}.featured button{padding:10px;gap:8px;font-size:12px}.featured i{width:25px;height:25px;font-size:15px}.featured .go{display:none}.details{min-height:78px}.heading input,input,select{font-size:16px}.card .cover span{font-size:clamp(17px,5vw,25px)}}
+
+#auth-loader[open]{position:fixed;inset:0;margin:0;width:100%;height:100%;max-width:none;max-height:none;border:0;border-radius:0;padding:24px;display:grid;place-items:center;background:radial-gradient(ellipse at 50% 40%,#203d64 0,#101d32 42%,#090f1b 78%);color:#fff;text-align:center}
+#auth-loader::backdrop{background:#090f1b}
+.auth-panel{width:min(330px,100%)}
+.auth-emblem{position:relative;width:122px;height:122px;margin:0 auto 29px;display:grid;place-items:center}
+.auth-ring,.auth-ring::after{position:absolute;inset:0;border:1px solid #ffbc6240;border-radius:50%;content:''}
+.auth-ring{border-top:2px solid #ffbc62;animation:auth-orbit 2s linear infinite}
+.auth-ring::after{inset:8px;border-color:#91b9ed40;border-bottom-color:#91b9ed}
+.auth-bolt{width:72px;height:72px;display:grid;place-items:center;border-radius:22px;background:linear-gradient(145deg,#ffdf9d,#f19b43);box-shadow:0 8px 38px #ffae5655;color:#22180e;animation:auth-float 2.4s ease-in-out infinite}
+.auth-panel h2{font-size:clamp(25px,8vw,36px);font-weight:900;letter-spacing:-.05em}
+.auth-panel h2 span{color:#ffbc62}
+.auth-panel p{color:#bccde6;margin:12px 0 22px}
+.auth-track{height:4px;border-radius:99px;background:#ffffff20;overflow:hidden;width:160px;margin:auto}
+.auth-track i{display:block;width:44%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ef9045,#ffe4a8);animation:auth-scan 1.45s ease-in-out infinite alternate}
+@keyframes auth-orbit{to{transform:rotate(360deg)}}
+@keyframes auth-float{50%{transform:translateY(-5px) rotate(-5deg)}}
+@keyframes auth-scan{to{transform:translateX(128%)}}
+@media(prefers-reduced-motion:reduce){.auth-ring,.auth-bolt,.auth-track i{animation:none}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -77,6 +95,14 @@ article{background:#0c1729}label[hidden]{display:none}
 <dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><label>Пакет<select id="package"></select></label><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><p class="note">Оператор назначит цену и проверит перевод вручную.</p><button type="button" id="submit-order" class="primary">Оформить заявку</button> <button type="submit">Сохранить черновик</button><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
+<dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
+  <div class="auth-panel">
+    <div class="auth-emblem" aria-hidden="true"><span class="auth-ring"></span><span class="auth-bolt"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M13 1 3 14h7l-1 9L21 9h-8l1-8z"/></svg></span></div>
+    <h2 id="auth-brand">SHAKHA <span>DONAT</span></h2>
+    <p id="auth-message" role="status">Входим через Telegram…</p>
+    <div class="auth-track" aria-hidden="true"><i></i></div>
+  </div>
+</dialog>
 <script>
 const products = [
   ['PUBG Mobile','Игровая валюта UC','PUBG','#b08038','game',['60 UC','325 UC','660 UC','1800 UC']],
@@ -347,7 +373,9 @@ $('#admin-orders').onclick = () => {
 };
 async function checkTelegram() {
   const button = $('#telegram-login');
+  const loader = $('#auth-loader');
   button.disabled = true;
+  if (telegram?.initData && !loader.open) loader.showModal();
   $('#telegram-status').textContent = 'Входим через Telegram…';
   try {
     const {user, isAdmin} = await api('/me');
@@ -355,7 +383,10 @@ async function checkTelegram() {
     $('#admin-orders').hidden = !isAdmin;
   } catch (error) {
     $('#telegram-status').textContent = error.message;
-  } finally { button.disabled = false; }
+  } finally {
+    if (loader.open) loader.close();
+    button.disabled = false;
+  }
 }
 $('#telegram-login').onclick = checkTelegram;
 document.addEventListener('DOMContentLoaded', () => {
