@@ -97,16 +97,16 @@ nav.store-nav{position:fixed;inset:auto 0 0;z-index:5;display:grid;grid-template
 /* Shared interior surfaces and controls */
 :root{--shop-bg:#0a101c;--shop-panel:#131e30;--shop-blue:#80bcff;--shop-line:#2b3e5d}
 body{background:radial-gradient(ellipse at 50% 0,#152644,transparent 32rem),var(--shop-bg)}
-:is(#checkout,#cart-dialog,#history,#admin-dialog){width:min(540px,94vw);max-height:88dvh;overflow:auto;border:1px solid var(--shop-line);border-radius:22px;background:linear-gradient(155deg,#192a43,var(--shop-panel) 52%);box-shadow:0 24px 90px #000b;padding:clamp(16px,5vw,25px)}
+:is(#checkout,#cart-dialog,#history,#admin-dialog,#users-dialog){width:min(540px,94vw);max-height:88dvh;overflow:auto;border:1px solid var(--shop-line);border-radius:22px;background:linear-gradient(155deg,#192a43,var(--shop-panel) 52%);box-shadow:0 24px 90px #000b;padding:clamp(16px,5vw,25px)}
 dialog::backdrop{background:#050b16c9;backdrop-filter:blur(5px)}
-:is(#checkout,#cart-dialog,#history,#admin-dialog) h2{margin-bottom:14px;padding-right:34px}
+:is(#checkout,#cart-dialog,#history,#admin-dialog,#users-dialog) h2{margin-bottom:14px;padding-right:34px}
 .close{min-width:38px;min-height:38px;color:#bed2ed;background:#0f1b2e;border-color:var(--shop-line)}
 :where(button,a,input,select):focus-visible{outline:2px solid #a4d4ff;outline-offset:3px}
 button:disabled{opacity:.55;cursor:not-allowed}
 .primary,.cta{background:linear-gradient(135deg,#327ae9,#225acc);box-shadow:0 6px 18px #2363d34d}
 .primary:not(:disabled):active,.cta:active{transform:translateY(1px)}
 #checkout input:not([type=radio]),#catalog input{background:#0c172a;border-color:#354969;min-height:46px}
-.pack-tile,.payment-methods .pay-card,.profile-links button,.profile-links a,.cart-row,#history article,#admin-dialog article{background:linear-gradient(140deg,#19283e,#121d2f);border:1px solid var(--shop-line);border-radius:15px}
+.pack-tile,.payment-methods .pay-card,.profile-links button,.profile-links a,.cart-row,#history article,#admin-dialog article,#users-dialog article{background:linear-gradient(140deg,#19283e,#121d2f);border:1px solid var(--shop-line);border-radius:15px}
 .pack-tile[aria-pressed=true],.pay-card:has(input:checked){border-color:#66a9ff;background:#172d4c;box-shadow:inset 0 0 0 1px #66a9ff,0 0 16px #448eff36}
 .store-nav .ui-icon,.featured .ui-icon,.profile-link-icon svg,.pay-icon svg{color:var(--shop-blue);filter:drop-shadow(0 0 5px #5daaff80)}
 .pay-icon svg{color:inherit}
@@ -120,8 +120,8 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .faq details{background:var(--faq-panel,#141e30);border:1px solid var(--edge);padding:13px 15px;margin:8px 0;border-radius:13px}.faq summary{color:inherit}
 :root[data-shop-theme=light]{color-scheme:light;--dim:#435571;--edge:#cad7ea;--shop-line:#c8d7ee;--shop-blue:#205ab4;--faq-panel:#fff}
 [data-shop-theme=light] body{background:#f2f6fc;color:#12223b}
-[data-shop-theme=light] :is(.card,.how,.featured button,.shop-settings,.profile-card,.profile-links button,.profile-links a,.profile-heading a,.pack-tile,.payment-methods .pay-card,.cart-row,#history article,#admin-dialog article,.checkout-secondary button,.close,.shop-actions button,.chip,.filters button:not(.active),#profile button:not(.primary)){background:#fff;color:#162746;border-color:#ccd9ed}
-[data-shop-theme=light] :is(#checkout,#history,#cart-dialog,#admin-dialog){background:#f7faff;color:#162746;border-color:#c8d7ee}
+[data-shop-theme=light] :is(.card,.how,.featured button,.shop-settings,.profile-card,.profile-links button,.profile-links a,.profile-heading a,.pack-tile,.payment-methods .pay-card,.cart-row,#history article,#admin-dialog article,#users-dialog article,.checkout-secondary button,.close,.shop-actions button,.chip,.filters button:not(.active),#profile button:not(.primary)){background:#fff;color:#162746;border-color:#ccd9ed}
+[data-shop-theme=light] :is(#checkout,#history,#cart-dialog,#admin-dialog,#users-dialog){background:#f7faff;color:#162746;border-color:#c8d7ee}
 [data-shop-theme=light] :is(#checkout input:not([type=radio]),#catalog input,.shop-settings select){background:#fff;color:#162746;border-color:#aebfda}
 [data-shop-theme=light] nav.store-nav{background:#fff;border-color:#c8d7ee}
 [data-shop-theme=light] .store-nav :is(a,button),[data-shop-theme=light] .catalog-price,[data-shop-theme=light] .pack-tile strong{color:#2455a0}
@@ -163,6 +163,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 [data-shop-theme=light] :is(.payment-dialog,.payment-summary,.order-transfer){background:#f2f7ff;color:#162746}
 .stars-button{width:100%;margin-top:9px;min-height:46px;border:1px solid #c58e31;background:#3f2e15;color:#ffe4a2;font-weight:800}[data-shop-theme=light] .stars-button{background:#fff0cc;color:#593800}
 .pack-bonus{color:#ffd678;font-weight:800}[data-shop-theme=light] .pack-bonus{color:#815600}
+.users-search{display:flex;gap:8px;align-items:center}.users-search input{min-width:0;flex:1}
+#users-list article{padding:14px;margin:10px 0;overflow-wrap:anywhere}
+#users-list article p{margin:5px 0 10px}#users-more[hidden],#admin-customer[hidden]{display:none}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 <link rel="stylesheet" href="catalog-covers.css?v=1">
@@ -214,6 +217,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <section id="owner-panel" class="owner-panel" aria-labelledby="owner-title" hidden>
 <div class="owner-heading"><h3 id="owner-title">Управление магазином</h3><span>Только для владельца</span></div>
 <div class="profile-links owner-links">
+<button id="owner-users" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="8" r="3"/><path d="M4 20v-2a6 6 0 0 1 12 0v2m1-15a3 3 0 0 1 0 6m3 9v-2a6 6 0 0 0-2-4"/></svg></span><span><b>Пользователи</b><small>Telegram ID, имена и заказы</small></span><span aria-hidden="true">›</span></button>
 <button id="admin-orders" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6m-6 4h6"/></svg></span><span><b>Заказы клиентов</b><small>Цены, проверка оплаты и статусы</small></span><span aria-hidden="true">›</span></button>
 <button id="open-settings" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16M8 4v4m8 2v4m-6 2v4"/></svg></span><span><b>Настройки магазина</b><small>Прайс, реквизиты и баннер</small></span><span aria-hidden="true">›</span></button><button id="owner-support" type="button"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 16a2 2 0 0 1-2 2H8l-4 3V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2zM8 9h8m-8 4h5"/></svg></span><span><b>Поддержка клиентов</b><small>Входящие сообщения и ответы</small></span><span aria-hidden="true">›</span></button>
 </div></section>
@@ -227,7 +231,12 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
 <dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend>Способ оплаты</legend><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4a8 8 0 1 0 1 15M8 16l4-9 4 9m-6-3h4"/></svg></span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/><path d="M3 20 21 4" stroke="#ff9b49"/></svg></span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/></svg></span><span><b>Visa / Mastercard и другие банки</b><small>Ручной перевод по реквизитам. Доступность подтвердит оператор.</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">После подтверждения цены открой «Заказы». Переводи деньги только по реквизитам, указанным в твоём заказе.</p><button type="button" id="submit-order" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>Оформить заявку</button><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
-<dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
+<dialog id="users-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Пользователи</h2>
+<p><span>Всего пользователей</span> · <strong id="users-total">—</strong></p>
+<form id="users-search" class="users-search"><input id="users-query" type="search" maxlength="100" placeholder="Telegram ID, @username или имя" aria-label="Поиск пользователей"><button type="submit">Найти</button></form>
+<p id="users-status" role="status"></p><div id="users-list"></div>
+<button id="users-more" type="button" hidden>Показать ещё</button></dialog>
+<dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><p id="admin-customer" hidden></p><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
   <div class="auth-panel">
     <div class="auth-emblem" aria-hidden="true">
@@ -909,12 +918,14 @@ function orderRow(order, paymentDetails, admin) {
   return row;
 }
 let historyRequest = 0;
+let adminCustomer = '';
 async function loadOrders(admin) {
   const request = ++historyRequest;
   const target = $(admin ? '#admin-list' : '#server-orders');
   target.textContent = 'Загрузка…';
   try {
-    const data = await api(admin ? '/admin/orders' : '/orders');
+    const adminPath = '/admin/orders' + (adminCustomer ? '?customer=' + encodeURIComponent(adminCustomer) : '');
+    const data = await api(admin ? adminPath : '/orders');
     if (request !== historyRequest) return;
     target.replaceChildren(...data.orders.map(order => orderRow(order, order.paymentDetails ?? data.paymentDetails, admin)));
     if (!data.orders.length) target.textContent = 'Заказов пока нет.';
@@ -922,11 +933,70 @@ async function loadOrders(admin) {
     if (request === historyRequest) target.textContent = error.message;
   }
 }
-$('#admin-orders').onclick = () => {
-  if ($('#owner-panel').hidden) return;
+function openAdminOrders(customer = '') {
+  if ($('#owner-panel').hidden || $('#admin-dialog').open) return;
+  adminCustomer = customer;
+  $('#admin-customer').hidden = !customer;
+  $('#admin-customer').textContent = customer ? 'Telegram ID: ' + customer : '';
   $('#admin-dialog').showModal();
-  loadOrders(true);
+  void loadOrders(true);
+}
+$('#admin-orders').onclick = () => openAdminOrders();
+
+let usersOffset = 0;
+let usersSearch = '';
+let usersRequest = 0;
+async function loadUsers(reset) {
+  const request = ++usersRequest;
+  const list = $('#users-list');
+  const status = $('#users-status');
+  const more = $('#users-more');
+  if (reset) {
+    usersOffset = 0;
+    usersSearch = $('#users-query').value.trim();
+    list.replaceChildren();
+  }
+  more.hidden = true;
+  status.textContent = 'Загрузка…';
+  try {
+    const data = await api('/admin/users?' + new URLSearchParams({q:usersSearch, offset:usersOffset}));
+    if (request !== usersRequest) return;
+    $('#users-total').textContent = data.total;
+    for (const user of data.users) {
+      const row = document.createElement('article');
+      const name = document.createElement('strong');
+      name.textContent = user.first_name || (user.username ? '@' + user.username : 'Пользователь Telegram');
+      const identity = document.createElement('p');
+      identity.textContent = 'Telegram ID: ' + user.telegram_id + (user.username && user.first_name ? ' · @' + user.username : '');
+      const button = document.createElement('button');
+      button.type = 'button';
+      const label = document.createElement('span');
+      label.textContent = 'Открыть заказы';
+      button.append(label, ' (' + user.order_count + ')');
+      button.onclick = () => openAdminOrders(user.telegram_id);
+      row.append(name, identity, button);
+      list.append(row);
+    }
+    usersOffset += data.users.length;
+    more.hidden = !data.more;
+    status.textContent = usersOffset ? '' : 'Пользователи не найдены.';
+  } catch (error) {
+    if (request !== usersRequest) return;
+    status.textContent = error.message;
+    more.hidden = reset;
+  }
+}
+$('#owner-users').onclick = () => {
+  if ($('#owner-panel').hidden || $('#users-dialog').open) return;
+  $('#users-query').value = '';
+  $('#users-dialog').showModal();
+  void loadUsers(true);
 };
+$('#users-search').onsubmit = event => {
+  event.preventDefault();
+  void loadUsers(true);
+};
+$('#users-more').onclick = () => void loadUsers(false);
 function renderProfile(user) {
   let verifiedData;
   try {
@@ -977,6 +1047,7 @@ async function checkTelegram() {
     $('#owner-panel').hidden = !isAdmin;
     if (isAdmin && location.hash === '#manage') openShopSettings();
     if (isAdmin && location.hash === '#admin') $('#admin-orders').click();
+    if (isAdmin && location.hash === '#users') $('#owner-users').click();
   } catch (error) {
     $('#telegram-status').textContent = error.message;
     button.hidden = false;
@@ -1077,7 +1148,7 @@ $('#send-cart').onclick = async () => {
 };
 renderCart();
 function showScreen() {
-  const profile = ['#profile','#admin','#manage'].includes(location.hash);
+  const profile = ['#profile','#admin','#manage','#users'].includes(location.hash);
   const faq = location.hash === '#shop-faq';
   $('#storefront').hidden = profile || faq;
   $('#faq-screen').hidden = !faq;
@@ -1107,6 +1178,7 @@ document.addEventListener('DOMContentLoaded', () => {
 const tajik = {"Каталог":"Феҳрист","Как оформить":"Тарзи фармоиш","Корзина":"Сабад","Мои заказы":"Фармоишҳои ман","ИГРЫ / TELEGRAM / STEAM":"БОЗИҲО / TELEGRAM / STEAM","Пополнение":"Пуркунӣ","в пару шагов.":"дар чанд қадам.","Игровая валюта, Telegram Stars и Premium в одном каталоге.":"Асъори бозӣ, Telegram Stars ва Premium дар як феҳрист.","Открыть каталог ↗":"Кушодани феҳрист ↗","Валюта TJS":"Асъор: сомонӣ","Ручная проверка оплаты":"Санҷиши пардохт аз ҷониби оператор","Сохранение черновика":"Нигоҳ доштани пешнавис","Выбрать пакет UC":"Интихоби бастаи UC","Выбрать звёзды":"Интихоби ситораҳо","Каталог пополнений":"Феҳристи пуркунӣ","Все товары":"Ҳамаи маҳсулот","Игры":"Бозиҳо","Платформы":"Платформаҳо","Найти игру или сервис":"Ҷустуҷӯи бозӣ ё хизматрасонӣ","Ничего не найдено. Попробуй другое название.":"Ҳеҷ чиз ёфт нашуд. Номи дигарро санҷ.","Как оформить заказ":"Тарзи сабти фармоиш","Выбери товар":"Маҳсулотро интихоб кун","Открой игру или сервис и укажи пакет.":"Бозӣ ё хизматрасониро кушо ва бастаро интихоб кун.","Заполни данные":"Маълумотро ворид кун","Укажи ID или имя пользователя.":"ID ё номи корбарро ворид кун.","Сохрани черновик":"Пешнависро нигоҳ дор","Он появится в разделе «Мои заказы».":"Он дар бахши «Фармоишҳои ман» пайдо мешавад.","Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.":"Дархостҳо дар таърихи ҳисоби Telegram нигоҳ дошта мешаванд. Пас аз муайян шудани нарх ва нашри реквизитҳо пардохт кардан мумкин аст.","Частые вопросы":"Саволҳои маъмул","Какие данные нужны для заказа?":"Барои фармоиш чӣ маълумот лозим аст?","Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.":"Барои Telegram @username-ро ворид кун. Барои бозиҳо ва Steam ID ё логинро ворид кун. Рамзи махфӣ лозим нест.","Где найти сохранённый заказ?":"Фармоиши нигоҳдоштаро аз куҷо ёбам?","Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.":"Дар ҳамин браузер «Фармоишҳои ман»-ро кушо. Пешнависро тағйир додан ё нест кардан мумкин аст.","Можно ли оплатить заказ сейчас?":"Ҳоло фармоишро пардохт кардан мумкин аст?","Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.":"Вақте оператор нархро муайян мекунад, реквизитҳо дар фармоиш пайдо мешаванд. Пас аз интиқол рақами амалиётро ворид кун.","Профиль":"Профил","Аккаунт Telegram":"Ҳисоби Telegram","Вход через Mini App":"Воридшавӣ тавассути Mini App","Копировать":"Нусхабардорӣ","Скопировано":"Нусхабардорӣ шуд","Выдели ID вручную":"ID-ро дастӣ интихоб кун","История заявок и их статусы":"Таърихи дархостҳо ва ҳолати онҳо","Товары, которые ты выбрал":"Маҳсулоти интихобкардаи ту","Как оформить и оплатить заказ":"Тарзи сабт ва пардохти фармоиш","Открой магазин через @ShakhaDonatBot для входа.":"Барои ворид шудан мағозаро аз @ShakhaDonatBot кушо.","Открыть в Telegram":"Кушодан дар Telegram","Повторить вход":"Аз нав ворид шудан","Управление заказами":"Идоракунии фармоишҳо","Главная":"Асосӣ","Заказы":"Фармоишҳо","ЧЕРНОВИК ЗАКАЗА":"ПЕШНАВИСИ ФАРМОИШ","Выбери пакет":"Бастаро интихоб кун","Сумма пополнения в сомони":"Маблағи пуркунӣ бо сомонӣ","ID или имя пользователя":"ID ё номи корбар","Способ оплаты":"Тарзи пардохт","Перевод по реквизитам":"Интиқол бо реквизитҳо","Visa / Mastercard и другие банки":"Visa / Mastercard ва бонкҳои дигар","Ручной перевод по реквизитам. Доступность подтвердит оператор.":"Интиқол бо реквизитҳо. Дастрасиро оператор тасдиқ мекунад.","Реквизиты появятся после подтверждения цены. Оператор проверит перевод вручную.":"Реквизитҳо пас аз тасдиқи нарх пайдо мешаванд. Оператор интиқолро месанҷад.","Оформить заявку":"Сабти дархост","В корзину":"Ба сабад","Сохранить черновик":"Нигоҳ доштани пешнавис","Черновики хранятся в этом браузере.":"Пешнависҳо дар ҳамин браузер нигоҳ дошта мешаванд.","Отправленные заказы":"Фармоишҳои фиристодашуда","Черновики на устройстве":"Пешнависҳо дар дастгоҳ","Заказы клиентов":"Фармоишҳои муштариён","ИГРОВЫЕ ПОПОЛНЕНИЯ":"ПУРКУНИИ БОЗИҲО","Проверяем вход через Telegram…":"Воридшавӣ тавассути Telegram санҷида мешавад…","Входим через Telegram…":"Тавассути Telegram ворид мешавем…","✓ Аккаунт подтверждён через Telegram.":"✓ Ҳисоб тавассути Telegram тасдиқ шуд.","Каждый товар отправляется отдельной заявкой. Цену назначит оператор.":"Ҳар маҳсулот ҳамчун дархости алоҳида фиристода мешавад. Нархро оператор муайян мекунад.","Отправить заявки":"Фиристодани дархостҳо","Корзина пока пуста.":"Сабад ҳоло холӣ аст.","Заказов пока нет.":"Ҳоло фармоиш нест.","Черновиков пока нет.":"Ҳоло пешнавис нест.","Удалить":"Нест кардан","Изменить":"Тағйир додан","Новая заявка":"Дархости нав","Ожидает оплаты":"Дар интизори пардохт","Проверяется":"Дар ҳоли санҷиш","Оплата подтверждена":"Пардохт тасдиқ шуд","Выполнен":"Иҷро шуд","Отменён":"Бекор шуд","Игровые алмазы":"Алмосҳои бозӣ","Игровая валюта UC":"Асъори бозии UC","Звёзды Telegram":"Ситораҳои Telegram","Подписка Telegram":"Обунаи Telegram","Пополнение Robux":"Пуркунии Robux","Пополнение кошелька":"Пуркунии ҳамён","Кристаллы и подписка":"Кристаллҳо ва обуна","Цена по запросу":"Нарх бо дархост","По запросу":"Бо дархост","Стоимость уточнит оператор.":"Нархро оператор муайян мекунад.","Загрузка…":"Боргирӣ…","Отправляем заявку…":"Дархост фиристода мешавад…","Имя пользователя Telegram":"Номи корбари Telegram","Игровой ID":"ID-и бозӣ","ID игрока":"ID-и бозингар","Логин Steam":"Логини Steam","Закрыть":"Пӯшидан","На главную":"Ба саҳифаи асосӣ","Настройки":"Танзимот","Язык":"Забон","Тема":"Мавзӯъ","Светлая":"Равшан","Тёмная":"Торик","ИГРА":"БОЗӢ","ПЛАТФОРМА":"ПЛАТФОРМА","© 2026 SHAKHA DONAT · Независимый сервис":"© 2026 SHAKHA DONAT · Хизматрасонии мустақил"};
 Object.assign(tajik, {'Панель администратора':'Панели маъмур','Назначить цену':'Муайян кардани нарх','Отменить':'Бекор кардан','Подтвердить оплату':'Тасдиқи пардохт','Отклонить перевод':'Рад кардани интиқол','Отметить выполненным':'Ҳамчун иҷрошуда қайд кардан'});
 Object.assign(tajik, {'Управление магазином':'Идоракунии мағоза','Только для владельца':'Танҳо барои соҳиб','Цены, проверка оплаты и статусы':'Нархҳо, санҷиши пардохт ва ҳолатҳо','Настройки магазина':'Танзимоти мағоза','Прайс, реквизиты и баннер':'Нархнома, реквизитҳо ва баннер'});
+Object.assign(tajik, {'Пользователи':'Корбарон','Telegram ID, имена и заказы':'Telegram ID, номҳо ва фармоишҳо','Всего пользователей':'Ҳамагӣ корбарон','Telegram ID, @username или имя':'Telegram ID, @username ё ном','Поиск пользователей':'Ҷустуҷӯи корбарон','Найти':'Ҷустуҷӯ','Показать ещё':'Бештар нишон додан','Пользователь Telegram':'Корбари Telegram','Открыть заказы':'Кушодани фармоишҳо','Пользователи не найдены.':'Корбарон ёфт нашуданд.'});
 const originalText = new WeakMap();
 const originalAttrs = new WeakMap();
 const preferences = {language:'ru',theme:'dark'};
