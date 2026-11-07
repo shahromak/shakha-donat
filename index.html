@@ -59,6 +59,16 @@ article{background:#0c1729}label[hidden]{display:none}
 @keyframes auth-scan{to{transform:translateX(128%)}}
 @media(prefers-reduced-motion:reduce){.auth-ring,.auth-bolt,.auth-track i{animation:none}}
 .shop-actions,.cart-actions{display:flex;gap:8px;flex-wrap:wrap}.cart-actions{margin-top:12px}.cart-row{display:grid;gap:8px}.cart-row button{justify-self:start}#cart-count{color:#ffbc62}@media(max-width:560px){.shop-actions{gap:4px;justify-content:flex-end}.shop-actions button{font-size:11px;padding:6px 8px}}
+#auth-loader[open]{background:radial-gradient(ellipse at 50% 32%,#103b49,transparent 58%),linear-gradient(#0b1929,#070e19);padding:16px;overflow:auto}
+.auth-panel{width:min(420px,100%);padding:24px clamp(14px,5vw,26px);border:1px solid #70e8df66;border-radius:29px;background:linear-gradient(155deg,#142d42,#0b1828);box-shadow:inset 0 1px #81fff15c,0 24px 64px #0008}
+.auth-emblem{width:98px;height:98px;margin-bottom:16px;border:1px solid #65e4dc66;border-radius:28px;background:radial-gradient(circle,#1a5762,#0b1a2a 75%);box-shadow:0 0 24px #42e8dc22}
+.auth-rocket{animation:auth-float 2.4s ease-in-out infinite;filter:drop-shadow(0 0 8px #5cffe976)}
+.auth-kicker{color:#a6c5d3;font-size:10px;letter-spacing:.23em;font-weight:800;margin-bottom:8px}
+.auth-panel h2,.auth-panel h2 span{color:#61f4ce}
+.auth-track{width:100%;height:6px;background:#68b9c720}
+.auth-track i{background:linear-gradient(90deg,#2ab3ed,#64ffd2)}
+.auth-panel .auth-caption{font-size:12px;color:#9edbd4;margin:15px 0 0}
+@media(prefers-reduced-motion:reduce){.auth-rocket{animation:none}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -98,10 +108,19 @@ article{background:#0c1729}label[hidden]{display:none}
 <dialog id="admin-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Заказы клиентов</h2><div id="admin-list" aria-live="polite"></div></dialog>
 <dialog id="auth-loader" aria-labelledby="auth-brand" aria-describedby="auth-message">
   <div class="auth-panel">
-    <div class="auth-emblem" aria-hidden="true"><span class="auth-ring"></span><span class="auth-bolt"><svg width="38" height="38" viewBox="0 0 24 24" fill="currentColor"><path d="M13 1 3 14h7l-1 9L21 9h-8l1-8z"/></svg></span></div>
+    <div class="auth-emblem" aria-hidden="true">
+<svg class="auth-rocket" width="80" height="80" viewBox="0 0 80 80"><g transform="rotate(39 40 40)">
+<path d="M34 56q-7 10 6 21 13-11 6-21" fill="#ff9f50"/><path d="M37 56q-4 8 3 14 7-6 3-14" fill="#ffe599"/>
+<path d="M31 39 21 58l13-5h12l13 5-10-19" fill="#fd687e" stroke="#ffc8d1"/>
+<path d="M40 6Q57 20 49 52l-4 6H35l-4-6Q23 20 40 6Z" fill="#cae9f9" stroke="#eefaff"/>
+<path d="M40 6q8 7 10 16H30q2-9 10-16" fill="#ff617c"/><circle cx="40" cy="34" r="8" fill="#122a43" stroke="#67eadf" stroke-width="2"/>
+<circle cx="38" cy="32" r="2" fill="#cafff8"/></g></svg>
+</div>
+<div class="auth-kicker">TELEGRAM MINI APP</div>
     <h2 id="auth-brand">SHAKHA <span>DONAT</span></h2>
-    <p id="auth-message" role="status">Входим через Telegram…</p>
+    <p id="auth-message" role="status">Проверяем вход через Telegram…</p>
     <div class="auth-track" aria-hidden="true"><i></i></div>
+    <p class="auth-caption">Подтверждаем аккаунт</p>
   </div>
 </dialog>
 <dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary">Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
