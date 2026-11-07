@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>SHAKHA DONAT — Пополнение игр и Telegram</title>
 <style>
 :root{color-scheme:dark;--lime:#e4ff79;--dim:#aea9bc;--edge:#ffffff20}
@@ -166,6 +166,60 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .users-search{display:flex;gap:8px;align-items:center}.users-search input{min-width:0;flex:1}
 #users-list article{padding:14px;margin:10px 0;overflow-wrap:anywhere}
 #users-list article p{margin:5px 0 10px}#users-more[hidden],#admin-customer[hidden]{display:none}
+
+/* Storefront refresh */
+:root{--store-accent:#ff8175;--store-accent-ink:#ffab9f;--store-surface:#141b2b;--store-border:#34405a}
+:root[data-shop-theme=light]{--store-accent:#b72b30;--store-accent-ink:#9e292b;--store-surface:#fff;--store-border:#cad7ea}
+body{background:radial-gradient(ellipse at 75% 0,#202747,transparent 44rem),#0b101b}
+header{min-height:74px;height:auto;padding-block:12px}
+.brand i{background:linear-gradient(140deg,#ff9e87,#fb5b63);color:#1c0b17;box-shadow:0 4px 22px #fa565847}
+.brand span{color:var(--store-accent-ink)}
+.shop-actions button{min-height:44px}
+.hero{min-height:380px;padding:clamp(24px,5vw,64px);border-color:#ad6c795e;background:radial-gradient(ellipse at 84% 54%,#923b50,transparent 58%),radial-gradient(ellipse at 58% 100%,#413c7e,transparent 60%),#16172c}
+.hero .eyebrow,.hero h1 span{color:#ffab9f}
+.hero h1{font-size:clamp(42px,6.3vw,84px);text-wrap:balance}
+.hero p{color:#e6def1;font-size:clamp(14px,1.6vw,17px)}
+.hero .art{filter:drop-shadow(0 20px 17px #180e22ae);right:1%}
+.hero .cta{background:#ff8275;color:#21121c;border-color:#ff8275;box-shadow:0 8px 25px #f35a6350}
+.hero .cta:hover{background:#ffad9e}.hero-help{display:block;width:fit-content;color:#f1e0eb;text-decoration:underline;text-underline-offset:4px;padding-block:11px;margin-top:4px}
+.info{margin-bottom:18px}.featured{margin-bottom:34px}
+#catalog{scroll-margin-top:16px}.heading{align-items:end;margin-bottom:12px}
+.section-kicker{font-size:10px;letter-spacing:.16em;font-weight:850;color:var(--store-accent-ink);margin-bottom:6px}
+.catalog-search{position:relative;margin:0;width:min(100%,320px);display:block;color:var(--dim)}
+.catalog-search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none}
+#catalog .catalog-search input{width:100%;padding-left:42px;min-height:48px}
+.filters{margin-bottom:10px}.filters button{min-height:44px;padding-inline:13px}
+.filters button.active{background:var(--store-accent);border-color:var(--store-accent);color:#22111b}
+[data-shop-theme=light] .filters button.active{color:#fff}
+.catalog-count{margin:0 0 12px;color:var(--dim);font-size:12px}
+.catalog-tile{position:relative;min-width:0}
+.catalog-tile .card{display:block;width:100%;height:100%;background:var(--store-surface);border-color:var(--store-border)}
+.catalog-tile .card:is(:hover,:focus-visible){border-color:var(--store-accent);transform:none}
+.catalog-tile .cover{height:clamp(118px,24vw,190px)}
+.catalog-tile .details{padding:13px;gap:7px;min-height:104px}
+.catalog-tile .details b>span:first-child{overflow-wrap:anywhere}
+.catalog-favorite{position:absolute;right:7px;top:7px;display:grid;place-items:center;width:44px;height:44px;padding:0;background:#111626ed;color:#fff;border:1px solid #ffffff52;border-radius:13px}
+.catalog-favorite[aria-pressed=true]{color:#ff958b}
+.catalog-favorite[aria-pressed=true] svg{fill:currentColor}
+#empty:not([hidden]),#favorites-empty:not([hidden]){padding:18px;border:1px dashed var(--store-border);border-radius:14px}
+.checkout-step{font-weight:800}
+.checkout-step i{display:inline-grid;place-items:center;width:26px;height:26px;margin-right:8px;border-radius:8px;background:#234677;color:#d7e8ff;font-size:13px;font-style:normal;vertical-align:middle}
+label.checkout-step{display:grid;grid-template-columns:auto 1fr;align-items:center;column-gap:0}
+label.checkout-step input{grid-column:1/-1}
+#checkout .eyebrow{margin-bottom:8px}
+.cart-browse:not([hidden]){display:inline-flex;margin-top:12px;align-items:center;min-height:44px;padding:0 14px;border:1px solid var(--store-border);border-radius:12px;color:var(--store-accent-ink);font-weight:750}
+.store-nav :is(a,button){border-radius:12px}.store-nav a[aria-current=page]{background:#22334e;color:#f0f5ff}
+[data-shop-theme=light] .store-nav a[aria-current=page]{background:#e4efff;color:#194e9e}
+[data-shop-theme=light] .store-nav a[aria-current=page] .ui-icon{color:#245fb4}
+@media(max-width:560px){
+  header{min-height:66px}.shop-actions #orders{display:none}.shop-actions button{font-size:12px;padding-inline:9px}
+  .hero{min-height:345px;align-items:start}.hero h1{font-size:clamp(38px,10vw,50px);margin-bottom:12px}
+  .hero p{max-width:240px;margin-bottom:15px}.hero .art{width:69%;height:153px;right:-8px;bottom:-4px}
+  .hero-help{font-size:12px}.heading{align-items:stretch}.catalog-search{width:100%}
+  .catalog-tile .details{padding:10px}.catalog-tile .cover{height:clamp(100px,31vw,156px)}
+  .filters{gap:6px}.filters button{font-size:12px;padding-inline:10px}
+}
+@media(max-width:350px){.brand{font-size:14px}.hero .art{width:61%;height:125px}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 <link rel="stylesheet" href="catalog-covers.css?v=1">
@@ -174,11 +228,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><div class="shop-actions"><button id="open-cart"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>Корзина <span id="cart-count">0</span></button><button id="orders">Мои заказы <span id="count">0</span></button></div></header>
 <main id="storefront">
 <aside id="shop-banner" class="shop-banner" aria-label="Объявление магазина" hidden><img id="shop-banner-image" alt="" hidden><div id="shop-banner-copy"></div></aside><section class="hero">
-<div class="hero-copy"><div class="eyebrow">ИГРЫ / TELEGRAM / STEAM</div><h1>Пополнение<br><span>в пару шагов.</span></h1><p>Игровая валюта, Telegram Stars и Premium в одном каталоге.</p><a class="primary cta" href="#catalog">Открыть каталог ↗</a></div>
+<div class="hero-copy"><div class="eyebrow">ИГРЫ / TELEGRAM / STEAM</div><h1>Пополнение<br><span>в пару шагов.</span></h1><p>Игровая валюта, Telegram Stars и Premium в одном каталоге.</p><a class="primary cta" href="#catalog">Открыть каталог ↗</a><a class="hero-help" href="#shop-faq">Как работает магазин</a></div>
 <svg class="art" viewBox="0 0 560 390" aria-hidden="true">
-<defs><linearGradient id="shell" x2=".8" y2="1"><stop stop-color="#f3e5ff"/><stop offset=".56" stop-color="#bb9af0"/><stop offset="1" stop-color="#7251ad"/></linearGradient><linearGradient id="side" x2="0" y2="1"><stop stop-color="#9469df"/><stop offset="1" stop-color="#301945"/></linearGradient><path id="pad" d="M122 111q23-30 76-19l50 12h67l53-12q51-11 74 19 29 37 48 127 12 55-20 66-26 9-54-26l-45-55q-13-16-35-16H224q-22 0-35 16l-45 55q-28 35-54 26-32-11-20-66 19-90 52-127Z"/></defs>
+<defs><linearGradient id="shell" x2=".8" y2="1"><stop stop-color="#ffe3db"/><stop offset=".56" stop-color="#fa9d9e"/><stop offset="1" stop-color="#744c86"/></linearGradient><linearGradient id="side" x2="0" y2="1"><stop stop-color="#9469df"/><stop offset="1" stop-color="#301945"/></linearGradient><path id="pad" d="M122 111q23-30 76-19l50 12h67l53-12q51-11 74 19 29 37 48 127 12 55-20 66-26 9-54-26l-45-55q-13-16-35-16H224q-22 0-35 16l-45 55q-28 35-54 26-32-11-20-66 19-90 52-127Z"/></defs>
 <g fill="none" stroke="#e6caff" opacity=".42"><ellipse cx="280" cy="195" rx="252" ry="102" transform="rotate(-22 280 195)"/><ellipse cx="280" cy="195" rx="265" ry="118" transform="rotate(-22 280 195)"/><circle cx="280" cy="195" r="163" stroke-dasharray="2 10"/></g>
-<g fill="#e4ff79"><path d="M77 104l5 14 14 5-14 5-5 14-5-14-14-5 14-5zM485 59l5 14 14 5-14 5-5 14-5-14-14-5 14-5zM485 276l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/><circle cx="136" cy="325" r="4"/></g>
+<g fill="#ffd8aa"><path d="M77 104l5 14 14 5-14 5-5 14-5-14-14-5 14-5zM485 59l5 14 14 5-14 5-5 14-5-14-14-5 14-5zM485 276l5 14 14 5-14 5-5 14-5-14-14-5 14-5z"/><circle cx="136" cy="325" r="4"/></g>
 <g transform="rotate(-13 280 195)"><use href="#pad" y="17" fill="url(#side)" stroke="#36194d" stroke-width="3"/><use href="#pad" fill="url(#shell)" stroke="#f2e0ff" stroke-width="2"/><path d="M233 113h94l14 45q4 13-9 13H227q-13 0-9-13z" fill="#38254e"/><path d="M248 122h66" stroke="#e4ff79" stroke-width="3" stroke-linecap="round"/><path d="M155 136h19v19h19v19h-19v19h-19v-19h-19v-19h19z" fill="#38254e"/><g fill="#4e376b" stroke="#e6ccff" stroke-width="2"><circle cx="224" cy="190" r="21"/><circle cx="335" cy="190" r="21"/><circle cx="396" cy="133" r="10"/><circle cx="419" cy="155" r="10"/><circle cx="373" cy="155" r="10"/><circle cx="396" cy="177" r="10"/></g><g fill="#795f9e"><circle cx="224" cy="187" r="13"/><circle cx="335" cy="187" r="13"/></g></g>
 </svg>
 </section>
@@ -187,11 +241,11 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <button data-feature="PUBG Mobile"><i aria-hidden="true"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10l4 6-9 10-9-10zm-4 6h18m-14-6 5 16 5-16"/></svg></i><span><b>PUBG Mobile</b><small>Выбрать пакет UC</small></span><span class="go" aria-hidden="true">↗</span></button>
 <button data-feature="Telegram Stars"><i aria-hidden="true"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg></i><span><b>Telegram Stars</b><small>Выбрать звёзды</small></span><span class="go" aria-hidden="true">↗</span></button>
 </section>
-<section id="catalog"><div class="heading"><h2>Каталог пополнений</h2><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button></div><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p></section>
+<section id="catalog"><div class="heading"><div><div class="section-kicker">ВЫБЕРИ СЕРВИС</div><h2>Каталог пополнений</h2></div><label class="catalog-search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></label></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button><button data-cat="favorites">Избранное</button></div><p class="catalog-count"><span>Найдено</span> <output id="catalog-count" aria-live="polite"></output></p><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p><p class="note" id="favorites-empty" hidden>Нажми на сердце на карточке, чтобы сохранить товар.</p></section>
 <section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.</p></section>
 
 </main>
-<main id="faq-screen" hidden><a class="faq-back" href="#profile">‹ Назад в профиль</a><section class="faq" id="shop-faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
+<main id="faq-screen" hidden><a class="faq-back" href="#">‹ На главную</a><section class="faq" id="shop-faq" aria-label="Частые вопросы"><h2>Частые вопросы</h2>
 <details><summary>Какие данные нужны для заказа?</summary><p class="note">Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.</p></details>
 <details><summary>Где найти сохранённый заказ?</summary><p class="note">Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.</p></details>
 <details><summary>Можно ли оплатить заказ сейчас?</summary><p class="note">Когда оператор назначит цену, реквизиты появятся в заказе. После перевода нажми «Подтвердить платёж» и загрузи чек.</p></details>
@@ -229,7 +283,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <a id="nav-profile" href="#profile"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg>Профиль</a>
 </nav>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ЧЕРНОВИК ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3>Выбери пакет</h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend>Способ оплаты</legend><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4a8 8 0 1 0 1 15M8 16l4-9 4 9m-6-3h4"/></svg></span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/><path d="M3 20 21 4" stroke="#ff9b49"/></svg></span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/></svg></span><span><b>Visa / Mastercard и другие банки</b><small>Ручной перевод по реквизитам. Доступность подтвердит оператор.</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">После подтверждения цены открой «Заказы». Переводи деньги только по реквизитам, указанным в твоём заказе.</p><button type="button" id="submit-order" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>Оформить заявку</button><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ОФОРМЛЕНИЕ ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3 class="checkout-step"><i aria-hidden="true">1</i><span>Выбери пакет</span></h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><p id="pack-quote" class="note" aria-live="polite"></p><label id="amountField" hidden>Сумма пополнения в сомони<input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" max="100000"></label><label class="checkout-step"><i aria-hidden="true">2</i><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><fieldset class="payment-methods"><legend class="checkout-step"><i aria-hidden="true">3</i><span>Способ оплаты</span></legend><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M18 4a8 8 0 1 0 1 15M8 16l4-9 4 9m-6-3h4"/></svg></span><span><b>Алиф</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="alif" checked></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/><path d="M3 20 21 4" stroke="#ff9b49"/></svg></span><span><b>Душанбе Сити</b><small>Перевод по реквизитам</small></span><input type="radio" name="paymentMethod" value="dc"></label><label class="pay-card"><span class="pay-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/></svg></span><span><b>Visa / Mastercard и другие банки</b><small>Ручной перевод по реквизитам. Доступность подтвердит оператор.</small></span><input type="radio" name="paymentMethod" value="other"></label></fieldset><p class="note">После подтверждения цены открой «Заказы». Переводи деньги только по реквизитам, указанным в твоём заказе.</p><button type="button" id="submit-order" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg>Оформить заявку</button><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="users-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Пользователи</h2>
 <p><span>Всего пользователей</span> · <strong id="users-total">—</strong></p>
@@ -249,7 +303,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
     
   </div>
 </dialog>
-<dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><div class="cart-actions"><button id="send-cart" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8zM11 13 21 3"/></svg>Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
+<dialog id="cart-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Корзина</h2><p class="note">Каждый товар отправляется отдельной заявкой. Цену назначит оператор.</p><div id="cart-items"></div><a class="cart-browse" href="#catalog" hidden>К каталогу</a><div class="cart-actions"><button id="send-cart" class="primary"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 11 18-8-8 18-2-8zM11 13 21 3"/></svg>Отправить заявки</button></div><p id="cart-status" class="note" role="status"></p></dialog>
 <dialog id="settings-dialog" aria-labelledby="settings-title"><button class="close" aria-label="Закрыть">×</button><h2 id="settings-title">Настройки магазина</h2><p id="settings-status" class="note" role="status"></p><form id="settings-form" hidden>
 <h3>Цены пакетов</h3><p class="note">Укажи сумму в сомони. Пустое поле оставляет прежний ориентир или цену по запросу.</p><div id="settings-prices"></div><p class="note">Для оплаты через Telegram заполни отдельную цену в ⭐. Пустое поле выключает Stars для пакета.</p>
 <h3>Реквизиты для перевода</h3><p class="note">Заполни реквизиты отдельно для каждого банка. Пустое поле означает, что для этого способа нет реквизитов.</p><div id="settings-payments"></div>
@@ -567,9 +621,32 @@ document.querySelectorAll('[data-feature]').forEach(button => {
   button.onclick = () => openProduct(products.find(product => product[0] === button.dataset.feature));
 });
 const coverIndex = new Map(['PUBG Mobile','Free Fire','Roblox','Telegram Stars','Telegram Premium','Steam','Mobile Legends','Genshin Impact'].map((name,index) => [name,index]));
+const favoriteKey = 'shakha-favorites';
+const favorites = new Set();
+try {
+  const saved = JSON.parse(localStorage.getItem(favoriteKey));
+  if (Array.isArray(saved)) for (const name of saved) if (typeof name === 'string') favorites.add(name);
+} catch {}
+const searchAliases = {
+  'PUBG Mobile':'пабг пубг pubgm uc',
+  'Free Fire':'фри фаер файр ff',
+  'Roblox':'роблокс робуксы robux',
+  'Telegram Stars':'телеграм тг звезды звёзды ситораҳо',
+  'Telegram Premium':'телеграм тг премиум подписка обуна',
+  'Steam':'стим кошелек кошелёк ҳамён',
+  'Mobile Legends':'мобайл легенд млбб mlbb алмос',
+  'Genshin Impact':'геншин genshin'
+};
+const normalizeSearch = value => value.toLowerCase().replaceAll('ё','е').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+function matchesCatalog(product, filter, term) {
+  const [name, description, , , group] = product;
+  if (filter === 'favorites' ? !favorites.has(name) : filter !== 'all' && group !== filter) return false;
+  const searchable = normalizeSearch([name, description, searchAliases[name]].join(' '));
+  return normalizeSearch(term).split(' ').every(word => searchable.includes(word));
+}
 function renderCatalog() {
-  const term = $('#search').value.trim().toLowerCase();
-  const matches = products.filter(product => (category === 'all' || product[4] === category) && product.slice(0, 2).join(' ').toLowerCase().includes(term));
+  const term = $('#search').value.trim();
+  const matches = products.filter(product => matchesCatalog(product, category, term));
   $('#cards').replaceChildren(...matches.map(product => {
     const [name, description, mark, accent, group] = product;
     const card = document.createElement('button');
@@ -589,9 +666,34 @@ function renderCatalog() {
     price.textContent = quote ? 'Ориентир от ' + quote : 'Цена по запросу';
     card.querySelector('.details').append(price);
     card.onclick = () => openProduct(product);
-    return card;
+    const tile = document.createElement('div');
+    tile.className = 'catalog-tile';
+    const favorite = document.createElement('button');
+    favorite.type = 'button';
+    favorite.className = 'catalog-favorite';
+    favorite.innerHTML = '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 20.5 4.6 13a4.8 4.8 0 0 1 6.8-6.8l.6.6.6-.6a4.8 4.8 0 0 1 6.8 6.8Z"/></svg>';
+    const updateFavorite = () => {
+      const saved = favorites.has(name);
+      favorite.setAttribute('aria-label', 'Избранное: ' + name);
+      favorite.setAttribute('aria-pressed', String(saved));
+    };
+    updateFavorite();
+    favorite.onclick = () => {
+      if (favorites.has(name)) favorites.delete(name);
+      else favorites.add(name);
+      try { localStorage.setItem(favoriteKey, JSON.stringify([...favorites])); } catch {}
+      if (category === 'favorites') {
+        renderCatalog();
+        ($('#cards .catalog-favorite') || $('[data-cat="favorites"]')).focus();
+      } else updateFavorite();
+    };
+    tile.append(card, favorite);
+    return tile;
   }));
-  $('#empty').hidden = matches.length > 0;
+  $('#catalog-count').textContent = matches.length;
+  const noFavorites = category === 'favorites' && favorites.size === 0;
+  $('#favorites-empty').hidden = !noFavorites;
+  $('#empty').hidden = matches.length > 0 || noFavorites;
 }
 document.querySelectorAll('[data-cat]').forEach(button => {
   button.setAttribute('aria-pressed', String(button.dataset.cat === category));
@@ -1071,6 +1173,8 @@ function saveCart(next) {
 function renderCart() {
   $('#cart-count').textContent = cart.length;
   $('#send-cart').disabled = sendingCart || !cart.length;
+  $('.cart-browse').hidden = cart.length > 0;
+  $('#send-cart').hidden = cart.length === 0;
   const list = $('#cart-items');
   list.replaceChildren();
   if (!cart.length) list.textContent = 'Корзина пока пуста.';
@@ -1093,6 +1197,7 @@ function renderCart() {
     list.append(row);
   }
 }
+$('.cart-browse').onclick = () => $('#cart-dialog').close();
 $('#open-cart').onclick = () => {
   renderCart();
   if (!sendingCart) $('#cart-status').textContent = '';
@@ -1150,6 +1255,11 @@ renderCart();
 function showScreen() {
   const profile = ['#profile','#admin','#manage','#users'].includes(location.hash);
   const faq = location.hash === '#shop-faq';
+  for (const link of document.querySelectorAll('.store-nav a[href="#"],.store-nav a[href="#catalog"]')) {
+    const active = !profile && !faq && (link.getAttribute('href') === '#' ? !location.hash : link.hash === location.hash);
+    if (active) link.setAttribute('aria-current','page');
+    else link.removeAttribute('aria-current');
+  }
   $('#storefront').hidden = profile || faq;
   $('#faq-screen').hidden = !faq;
   $('#profile-screen').hidden = !profile;
@@ -1179,6 +1289,7 @@ const tajik = {"Каталог":"Феҳрист","Как оформить":"Та
 Object.assign(tajik, {'Панель администратора':'Панели маъмур','Назначить цену':'Муайян кардани нарх','Отменить':'Бекор кардан','Подтвердить оплату':'Тасдиқи пардохт','Отклонить перевод':'Рад кардани интиқол','Отметить выполненным':'Ҳамчун иҷрошуда қайд кардан'});
 Object.assign(tajik, {'Управление магазином':'Идоракунии мағоза','Только для владельца':'Танҳо барои соҳиб','Цены, проверка оплаты и статусы':'Нархҳо, санҷиши пардохт ва ҳолатҳо','Настройки магазина':'Танзимоти мағоза','Прайс, реквизиты и баннер':'Нархнома, реквизитҳо ва баннер'});
 Object.assign(tajik, {'Пользователи':'Корбарон','Telegram ID, имена и заказы':'Telegram ID, номҳо ва фармоишҳо','Всего пользователей':'Ҳамагӣ корбарон','Telegram ID, @username или имя':'Telegram ID, @username ё ном','Поиск пользователей':'Ҷустуҷӯи корбарон','Найти':'Ҷустуҷӯ','Показать ещё':'Бештар нишон додан','Пользователь Telegram':'Корбари Telegram','Открыть заказы':'Кушодани фармоишҳо','Пользователи не найдены.':'Корбарон ёфт нашуданд.'});
+Object.assign(tajik, {'Найдено':'Ёфт шуд','Как работает магазин':'Мағоза чӣ гуна кор мекунад','ВЫБЕРИ СЕРВИС':'ХИЗМАТРАСОНИРО ИНТИХОБ КУН','Избранное':'Дӯстдоштаҳо','Нажми на сердце на карточке, чтобы сохранить товар.':'Барои нигоҳ доштани маҳсулот дилчаро дар корт пахш кун.','ОФОРМЛЕНИЕ ЗАКАЗА':'САБТИ ФАРМОИШ','К каталогу':'Ба феҳрист','‹ На главную':'‹ Ба саҳифаи асосӣ'});
 const originalText = new WeakMap();
 const originalAttrs = new WeakMap();
 const preferences = {language:'ru',theme:'dark'};
@@ -1190,6 +1301,7 @@ try {
 function translateText(value) {
   if (preferences.language !== 'tg') return value;
   const trimmed = value.trim();
+  if (trimmed.startsWith('Избранное: ')) return value.replace('Избранное:', 'Дӯстдоштаҳо:');
   if (Object.hasOwn(tajik, trimmed)) return value.replace(trimmed, tajik[trimmed]);
   const status = trimmed.split(' · ')[0];
   if (trimmed.includes(' · ') && ['Новая заявка','Ожидает оплаты','Проверяется','Оплата подтверждена','Выполнен','Отменён'].includes(status)) return value.replace(status, tajik[status]);
