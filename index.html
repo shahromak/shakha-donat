@@ -231,8 +231,7 @@ renderCatalog();
 
 
 const labels = {new:'Новая заявка', awaiting_payment:'Ожидает оплаты', review:'Проверяется', paid:'Оплата подтверждена', completed:'Выполнен', cancelled:'Отменён'};
-const telegram = window.Telegram?.WebApp;
-telegram?.ready();
+let telegram;
 async function api(path, body) {
   if (!telegram?.initData) throw new Error('Открой магазин через Mini App в @ShakhaDonatBot.');
   let response;
@@ -349,6 +348,7 @@ $('#admin-orders').onclick = () => {
 async function checkTelegram() {
   const button = $('#telegram-login');
   button.disabled = true;
+  $('#telegram-status').textContent = 'Входим через Telegram…';
   try {
     const {user, isAdmin} = await api('/me');
     $('#telegram-status').textContent = 'Telegram подтверждён: ' + (user.first_name || user.username || user.id);
@@ -358,7 +358,11 @@ async function checkTelegram() {
   } finally { button.disabled = false; }
 }
 $('#telegram-login').onclick = checkTelegram;
-if (telegram?.initData) checkTelegram();
+document.addEventListener('DOMContentLoaded', () => {
+  telegram = window.Telegram?.WebApp;
+  telegram?.ready();
+  if (telegram?.initData) checkTelegram();
+}, {once:true});
 </script>
 </body>
 </html>
