@@ -28,7 +28,56 @@ const database = process.env.DATABASE_URL ? new pg.Pool({
   connectionString: process.env.DATABASE_URL, max: 5, connectionTimeoutMillis: 5000
 }) : null;
 let schema;
-const products = new Map(Object.entries({"PUBG Mobile":["60 UC","325 UC","660 UC","1800 UC"],"Free Fire":["100 алмазов","310 алмазов","520 алмазов"],"Roblox":["400 Robux","800 Robux","1700 Robux"],"Telegram Stars":["50 Stars","100 Stars","500 Stars"],"Telegram Premium":["3 месяца","6 месяцев","12 месяцев"],"Steam":["Указать сумму"],"Mobile Legends":["86 алмазов","172 алмаза","257 алмазов"],"Genshin Impact":["60 кристаллов","330 кристаллов","Благословение Луны"]}));
+const products = new Map(Object.entries({
+  "PUBG Mobile": [
+    "60 UC",
+    "325 UC",
+    "660 UC",
+    "1800 UC"
+  ],
+  "Free Fire": [
+    "100 алмазов",
+    "310 алмазов",
+    "520 алмазов"
+  ],
+  "Roblox": [
+    "400 Robux",
+    "800 Robux",
+    "1700 Robux"
+  ],
+  "Telegram Stars": [
+    "50 Stars",
+    "100 Stars",
+    "250 Stars",
+    "500 Stars",
+    "1000 Stars",
+    "2500 Stars"
+  ],
+  "Telegram Premium": [
+    "3 месяца",
+    "6 месяцев",
+    "12 месяцев"
+  ],
+  "Steam": [
+    "Указать сумму"
+  ],
+  "Mobile Legends": [
+    "68 алмазов",
+    "135 алмазов",
+    "160 алмазов",
+    "225 алмазов",
+    "265 алмазов",
+    "275 алмазов",
+    "86 алмазов",
+    "172 алмаза",
+    "257 алмазов"
+  ],
+  "Genshin Impact": [
+    "60 кристаллов",
+    "330 кристаллов",
+    "Благословение Луны"
+  ]
+}));
 const fields = 'id, product, package, account, amount, status, price_minor, payment_reference, created_at';
 const adminOnly = (req, res, next) => {
   if (req.telegramUser.id !== ADMIN_ID) return res.status(403).json({error:'Доступ только для администратора'});
