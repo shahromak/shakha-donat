@@ -146,13 +146,14 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .owner-links{margin:0}
 [data-shop-theme=light] .owner-panel{background:#edf4ff;border-color:#bacfee}
 [data-shop-theme=light] .owner-heading>span{background:#dceaff;color:#214c85}
+.shop-banner img,.banner-preview{display:block;width:100%;max-height:320px;object-fit:contain;border-radius:10px}.shop-banner img[hidden],.banner-preview[hidden],#remove-banner-photo[hidden]{display:none}.shop-banner img:not([hidden])+div:not(:empty){margin-top:10px}.banner-preview{margin:8px 0}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
 <body>
 <header><a class="brand" href="#"><i>ϟ</i>SHAKHA <span>DONAT</span></a><nav><a href="#catalog">Каталог</a><a href="#how">Как оформить</a></nav><div class="shop-actions"><button id="open-cart"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>Корзина <span id="cart-count">0</span></button><button id="orders">Мои заказы <span id="count">0</span></button></div></header>
 <main id="storefront">
-<aside id="shop-banner" class="shop-banner" aria-label="Объявление магазина" hidden></aside><section class="hero">
+<aside id="shop-banner" class="shop-banner" aria-label="Объявление магазина" hidden><img id="shop-banner-image" alt="" hidden><div id="shop-banner-copy"></div></aside><section class="hero">
 <div class="hero-copy"><div class="eyebrow">ИГРЫ / TELEGRAM / STEAM</div><h1>Пополнение<br><span>в пару шагов.</span></h1><p>Игровая валюта, Telegram Stars и Premium в одном каталоге.</p><a class="primary cta" href="#catalog">Открыть каталог ↗</a></div>
 <svg class="art" viewBox="0 0 560 390" aria-hidden="true">
 <defs><linearGradient id="shell" x2=".8" y2="1"><stop stop-color="#f3e5ff"/><stop offset=".56" stop-color="#bb9af0"/><stop offset="1" stop-color="#7251ad"/></linearGradient><linearGradient id="side" x2="0" y2="1"><stop stop-color="#9469df"/><stop offset="1" stop-color="#301945"/></linearGradient><path id="pad" d="M122 111q23-30 76-19l50 12h67l53-12q51-11 74 19 29 37 48 127 12 55-20 66-26 9-54-26l-45-55q-13-16-35-16H224q-22 0-35 16l-45 55q-28 35-54 26-32-11-20-66 19-90 52-127Z"/></defs>
@@ -222,7 +223,9 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <dialog id="settings-dialog" aria-labelledby="settings-title"><button class="close" aria-label="Закрыть">×</button><h2 id="settings-title">Настройки магазина</h2><p id="settings-status" class="note" role="status"></p><form id="settings-form" hidden>
 <h3>Цены пакетов</h3><p class="note">Укажи сумму в сомони. Пустое поле оставляет прежний ориентир или цену по запросу.</p><div id="settings-prices"></div>
 <h3>Реквизиты для перевода</h3><p class="note">Покупатель увидит реквизиты своего банка после назначения цены заказа.</p><div id="settings-payments"></div>
-<label><span>Баннер на главной</span><textarea id="settings-banner" rows="3" maxlength="300" placeholder="Акция или объявление"></textarea></label><p class="note">Очисти поле, чтобы скрыть баннер.</p><button id="settings-save" class="primary" type="submit">Опубликовать настройки</button></form></dialog>
+<label><span>Баннер на главной</span><textarea id="settings-banner" rows="3" maxlength="300" placeholder="Акция или объявление"></textarea></label><label><span>Фото баннера</span><input id="settings-banner-file" type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif"></label>
+<img id="settings-banner-preview" class="banner-preview" alt="Предпросмотр баннера" hidden>
+<button id="remove-banner-photo" type="button" hidden>Удалить фото</button><p class="note">Можно оставить только фото или только текст. Очисти оба поля, чтобы скрыть баннер.</p><button id="settings-save" class="primary" type="submit">Опубликовать настройки</button></form></dialog>
 <script>
 const products = [
   ["PUBG Mobile","Игровая валюта UC","PUBG","#b08038","game",["60 UC","325 UC","660 UC","1800 UC"]],
@@ -274,6 +277,8 @@ const formatQuote = new Intl.NumberFormat('ru', {maximumFractionDigits:2});
 
 let managedPrices = {};
 let settingsLoading = false;
+let draftBannerImage = '';
+let processingBannerImage = false;
 async function refreshShopSettings() {
   try {
     const response = await fetch('https://shakha-donat-api-v2.onrender.com/api/shop/settings', {
@@ -283,8 +288,9 @@ async function refreshShopSettings() {
     const data = await response.json();
     managedPrices = data.prices || {};
     const banner = $('#shop-banner');
-    banner.textContent = data.banner || '';
-    banner.hidden = !data.banner;
+    $('#shop-banner-copy').textContent = data.banner || '';
+    showBannerImage($('#shop-banner-image'), data.bannerImage);
+    banner.hidden = !data.banner && $('#shop-banner-image').hidden;
     renderCatalog();
     if ($('#checkout').open && selectedProduct) renderPackages(selectedProduct);
   } catch {}
@@ -296,7 +302,70 @@ function settingField(label, input) {
   row.append(title, input);
   return row;
 }
+function showBannerImage(image, value) {
+  if (typeof value === 'string' && value.startsWith('data:image/jpeg;base64,')) {
+    image.src = value;
+    image.hidden = false;
+  } else {
+    image.removeAttribute('src');
+    image.hidden = true;
+  }
+}
+function previewBanner() {
+  showBannerImage($('#settings-banner-preview'), draftBannerImage);
+  $('#remove-banner-photo').hidden = !draftBannerImage;
+}
+$('#remove-banner-photo').onclick = () => {
+  draftBannerImage = '';
+  $('#settings-banner-file').value = '';
+  previewBanner();
+};
+$('#settings-banner-file').onchange = async event => {
+  const file = event.target.files[0];
+  if (!file || processingBannerImage) return;
+  const status = $('#settings-status');
+  if (file.size > 12000000) {
+    status.textContent = 'Выбери фото размером до 12 МБ.';
+    return;
+  }
+  processingBannerImage = true;
+  $('#settings-save').disabled = true;
+  $('#remove-banner-photo').disabled = true;
+  $('#settings-banner-file').disabled = true;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const scale = Math.min(1, 1000 / image.width, 600 / image.height);
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(image.width * scale));
+    canvas.height = Math.max(1, Math.round(image.height * scale));
+    const context = canvas.getContext('2d');
+    context.fillStyle = '#142238';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+    let encoded = canvas.toDataURL('image/jpeg', .78);
+    if (encoded.length > 200000) encoded = canvas.toDataURL('image/jpeg', .45);
+    if (encoded.length > 200000) throw new Error('Image too large');
+    draftBannerImage = encoded;
+    previewBanner();
+    status.textContent = 'Фото готово. Нажми «Опубликовать настройки».';
+  } catch {
+    status.textContent = 'Не удалось открыть фото. Попробуй JPG или PNG.';
+  } finally {
+    URL.revokeObjectURL(url);
+    processingBannerImage = false;
+    $('#settings-save').disabled = false;
+    $('#remove-banner-photo').disabled = false;
+    $('#settings-banner-file').disabled = false;
+    event.target.value = '';
+  }
+};
 function fillShopSettings({settings, catalog, methods}) {
+  draftBannerImage = settings.bannerImage || '';
+  $('#settings-banner-file').value = '';
+  previewBanner();
   $('#settings-banner').value = settings.banner || '';
   const groups = Object.entries(catalog).filter(([name]) => name !== 'Steam').map(([name, packs]) => {
     const group = document.createElement('details');
@@ -351,7 +420,7 @@ $('#open-settings').onclick = openShopSettings;
 $('#settings-form').onsubmit = async event => {
   event.preventDefault();
   const button = $('#settings-save');
-  if (button.disabled) return;
+  if (button.disabled || processingBannerImage) return;
   const prices = {};
   const payments = {};
   for (const input of document.querySelectorAll('#settings-prices input')) {
@@ -362,7 +431,7 @@ $('#settings-form').onsubmit = async event => {
   }
   button.disabled = true;
   try {
-    await api('/admin/settings', {prices,payments,banner:$('#settings-banner').value});
+    await api('/admin/settings', {prices,payments,banner:$('#settings-banner').value,bannerImage:draftBannerImage});
     $('#settings-status').textContent = 'Настройки опубликованы.';
     await refreshShopSettings();
   } catch (error) {
