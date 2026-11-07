@@ -28,7 +28,16 @@ app.use((req,res,next)=>{const origin=req.headers.origin;if(origin&&allowedOrigi
 function verifyInitData(raw){if(!BOT_TOKEN||typeof raw!=='string'||raw.length>8192)throw Error('Telegram authentication unavailable');const params=new URLSearchParams(raw),hash=params.get('hash');if(!hash||!/^[0-9a-f]{64}$/i.test(hash))throw Error('Invalid Telegram signature');params.delete('hash');const check=[...params.entries()].sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>k+'='+v).join('\n');const secret=crypto.createHmac('sha256','WebAppData').update(BOT_TOKEN).digest();const digest=crypto.createHmac('sha256',secret).update(check).digest();if(!crypto.timingSafeEqual(Buffer.from(hash,'hex'),digest))throw Error('Invalid Telegram signature');const authDate=Number(params.get('auth_date'));if(!Number.isFinite(authDate)||authDate>Math.floor(Date.now()/1000)+60||Math.floor(Date.now()/1000)-authDate>3600)throw Error('Expired Telegram login');const user=JSON.parse(params.get('user')||'null');if(!user||!Number.isSafeInteger(user.id))throw Error('Invalid Telegram user');return {id:String(user.id),first_name:String(user.first_name||''),username:String(user.username||'')}}
 function auth(req,res,next){try{const header=req.get('Authorization')||'';if(!header.startsWith('tma '))return res.status(401).json({error:'Telegram authorization required'});req.telegramUser=verifyInitData(header.slice(4));next()}catch(e){res.status(401).json({error:'Invalid or expired Telegram authorization'})}}
 app.get('/health',(_req,res)=>res.json({ok:true,service:'shakha-donat-api'}));
-app.get('/api/me',auth,(req,res)=>res.json({user:req.telegramUser,isAdmin:req.telegramUser.id===ADMIN_ID}));
+function sendProfile(req, res) {
+  res.set('Cache-Control', 'no-store').json({user:req.telegramUser,isAdmin:req.telegramUser.id===ADMIN_ID});
+}
+app.get('/api/me', auth, orderRoute(async (req, res) => {
+  const {id, first_name, username} = req.telegramUser;
+  await database.query(`INSERT INTO storefront_users (telegram_id, first_name, username)
+    VALUES ($1,$2,$3) ON CONFLICT (telegram_id) DO UPDATE
+    SET first_name=EXCLUDED.first_name, username=EXCLUDED.username, last_seen=now()`, [id,first_name,username]);
+  sendProfile(req,res);
+}, sendProfile));
 app.get('/api/admin/check',auth,(req,res)=>req.telegramUser.id===ADMIN_ID?res.json({authorized:true}):res.status(403).json({error:'Forbidden'}));
 
 const database = process.env.DATABASE_URL ? new pg.Pool({
@@ -81,9 +90,10 @@ const adminOnly = (req, res, next) => {
   if (req.telegramUser.id !== ADMIN_ID) return res.status(403).json({error:'Доступ только для администратора'});
   next();
 };
-function orderRoute(handler) {
+function orderRoute(handler, fallback) {
   return async (req, res) => {
     res.set('Cache-Control', 'no-store');
+    if (!database && fallback) return fallback(req,res);
     if (!database) return res.status(503).json({error:'Хранилище заказов ещё не подключено'});
     try {
       schema ??= database.query(`CREATE TABLE IF NOT EXISTS storefront_orders (
@@ -99,6 +109,10 @@ function orderRoute(handler) {
         id bigserial PRIMARY KEY, customer_id text NOT NULL, sender text NOT NULL,
         body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
       ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
+      CREATE TABLE IF NOT EXISTS storefront_users (
+        telegram_id text PRIMARY KEY, first_name text NOT NULL, username text NOT NULL,
+        last_seen timestamptz NOT NULL DEFAULT now()
+      );
       CREATE TABLE IF NOT EXISTS storefront_operator_presence (id integer PRIMARY KEY, seen_at timestamptz NOT NULL);
       CREATE INDEX IF NOT EXISTS storefront_orders_customer_date ON storefront_orders (customer_id, created_at DESC); CREATE TABLE IF NOT EXISTS storefront_catalog_migrations (name text PRIMARY KEY);
       WITH first_run AS (
@@ -114,6 +128,7 @@ function orderRoute(handler) {
       await handler(req, res);
     } catch (error) {
       console.error('Orders storage error:', error.code || error.name);
+      if (fallback) return fallback(req,res);
       res.status(503).json({error:'История временно недоступна. Повтори попытку позже.'});
     }
   };
@@ -359,8 +374,35 @@ app.get('/api/admin/orders/:id/receipt', auth, adminOnly, orderRoute(async (req,
   if (!rows[0]) return res.sendStatus(404);
   res.json({mime:rows[0].mime,receipt:rows[0].content.toString('base64')});
 }));
-app.get('/api/admin/orders', auth, adminOnly, orderRoute(async (_req, res) => {
-  const {rows} = await database.query('SELECT ' + fields + ', customer_id, EXISTS (SELECT 1 FROM storefront_receipts r WHERE r.order_id=storefront_orders.id) AS has_receipt FROM storefront_orders ORDER BY created_at DESC LIMIT 100');
+app.get('/api/admin/users', auth, adminOnly, orderRoute(async (req, res) => {
+  const search = String(req.query.q ?? '').trim().replace(/^@/, '').slice(0, 100);
+  const offset = Number(req.query.offset ?? 0);
+  if (!Number.isSafeInteger(offset) || offset < 0) return res.sendStatus(400);
+  const {rows:[result]} = await database.query(`
+    WITH counts AS (
+      SELECT customer_id, count(*)::int AS order_count FROM storefront_orders GROUP BY customer_id
+    ), ids AS (
+      SELECT telegram_id FROM storefront_users
+      UNION SELECT customer_id FROM counts
+      UNION SELECT customer_id FROM storefront_support
+    ), page AS (
+      SELECT ids.telegram_id, u.first_name, u.username, u.last_seen, coalesce(c.order_count,0) AS order_count
+      FROM ids LEFT JOIN storefront_users u USING (telegram_id)
+      LEFT JOIN counts c ON c.customer_id=ids.telegram_id
+      WHERE $1='' OR strpos(ids.telegram_id,$1)>0
+        OR strpos(lower(u.username),lower($1))>0 OR strpos(lower(u.first_name),lower($1))>0
+      ORDER BY u.last_seen DESC NULLS LAST, ids.telegram_id
+      LIMIT 31 OFFSET $2
+    )
+    SELECT (SELECT count(*)::int FROM ids) AS total,
+      coalesce(json_agg(page ORDER BY last_seen DESC NULLS LAST, telegram_id),'[]'::json) AS users FROM page
+  `, [search,offset]);
+  res.json({total:result.total, users:result.users.slice(0,30), more:result.users.length>30});
+}));
+app.get('/api/admin/orders', auth, adminOnly, orderRoute(async (req, res) => {
+  const customer = req.query.customer ?? null;
+  if (customer !== null && (typeof customer !== 'string' || !/^\d{1,20}$/.test(customer))) return res.sendStatus(400);
+  const {rows} = await database.query('SELECT ' + fields + ', customer_id, EXISTS (SELECT 1 FROM storefront_receipts r WHERE r.order_id=storefront_orders.id) AS has_receipt FROM storefront_orders WHERE ($1::text IS NULL OR customer_id=$1) ORDER BY created_at DESC LIMIT 100', [customer]);
   res.json({orders:rows});
 }));
 app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) => {
@@ -392,7 +434,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=catalog-art';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=admin-users';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
@@ -495,6 +537,7 @@ app.post(webhookPath, async (req, res) => {
   const buttons = [[{text:'Открыть магазин', web_app:{url:shopUrl}}]];
   if (isAdmin) {
     buttons.push([{text:'Панель администратора', web_app:{url:shopUrl + '#admin'}}]);
+    buttons.push([{text:'Пользователи', web_app:{url:shopUrl + '#users'}}]);
     buttons.push([{text:'Настройки магазина', web_app:{url:shopUrl + '#manage'}}]);
   }
   const reply = command === '/admin'
