@@ -115,6 +115,19 @@ button:disabled{opacity:.55;cursor:not-allowed}
 .cart-actions .primary{min-height:46px}.cart-row{padding:13px}
 @media(prefers-reduced-motion:reduce){.primary,.card,.pay-card{transition:none}.primary:active,.cta:active{transform:none}}
 #submit-order,#add-cart,#send-cart{display:inline-flex;align-items:center;justify-content:center;gap:8px}#submit-order{display:flex;width:100%;min-height:48px}
+
+.shop-settings{padding:14px 16px;background:#131e30;border:1px solid var(--edge);border-radius:16px;margin:16px 0}.shop-settings h3{margin:0 0 7px}.shop-settings label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0;padding:8px 0}.shop-settings select{min-width:114px;font-size:16px}
+.faq details{background:var(--faq-panel,#141e30);border:1px solid var(--edge);padding:13px 15px;margin:8px 0;border-radius:13px}.faq summary{color:inherit}
+:root[data-shop-theme=light]{color-scheme:light;--dim:#435571;--edge:#cad7ea;--shop-line:#c8d7ee;--shop-blue:#205ab4;--faq-panel:#fff}
+[data-shop-theme=light] body{background:#f2f6fc;color:#12223b}
+[data-shop-theme=light] :is(.card,.how,.featured button,.shop-settings,.profile-card,.profile-links button,.profile-links a,.profile-heading a,.pack-tile,.payment-methods .pay-card,.cart-row,#history article,#admin-dialog article,.checkout-secondary button,.close,.shop-actions button,.chip,.filters button:not(.active),#profile button:not(.primary)){background:#fff;color:#162746;border-color:#ccd9ed}
+[data-shop-theme=light] :is(#checkout,#history,#cart-dialog,#admin-dialog){background:#f7faff;color:#162746;border-color:#c8d7ee}
+[data-shop-theme=light] :is(#checkout input:not([type=radio]),#catalog input,.shop-settings select){background:#fff;color:#162746;border-color:#aebfda}
+[data-shop-theme=light] nav.store-nav{background:#fff;border-color:#c8d7ee}
+[data-shop-theme=light] .store-nav :is(a,button),[data-shop-theme=light] .catalog-price,[data-shop-theme=light] .pack-tile strong{color:#2455a0}
+[data-shop-theme=light] .store-nav .ui-icon{color:#245fb4}
+[data-shop-theme=light] .pay-card:has(input:checked),[data-shop-theme=light] .pack-tile[aria-pressed=true]{background:#e7f1ff;border-color:#397adc}
+[data-shop-theme=light] :is(.hero,.cover){color:#fff}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 </head>
@@ -155,7 +168,7 @@ button:disabled{opacity:.55;cursor:not-allowed}
 <button id="profile-cart"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg></span><span><b>Корзина</b><small>Товары, которые ты выбрал</small></span><span aria-hidden="true">›</span></button>
 <a href="#shop-faq"><span class="profile-link-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zm-3-13a3 3 0 1 1 5 2c-1 1-2 1-2 3m0 3h.01"/></svg></span><span><b>Частые вопросы</b><small>Как оформить и оплатить заказ</small></span><span aria-hidden="true">›</span></a>
 </div>
-<p id="telegram-status" class="note" role="status">Открой магазин через @ShakhaDonatBot для входа.</p>
+<section class="shop-settings" aria-labelledby="shop-settings-title"><h3 id="shop-settings-title">Настройки</h3><label><span>Язык</span><select id="shop-language"><option value="ru">Русский</option><option value="tg">Тоҷикӣ</option></select></label><label><span>Тема</span><select id="shop-theme"><option value="dark">Тёмная</option><option value="light">Светлая</option></select></label></section><p id="telegram-status" class="note" role="status">Открой магазин через @ShakhaDonatBot для входа.</p>
 <a id="telegram-open-bot" class="cta primary" href="https://t.me/ShakhaDonatBot">Открыть в Telegram</a>
 <button id="telegram-login" hidden>Повторить вход</button>
 <button id="admin-orders" hidden>Управление заказами</button>
@@ -684,6 +697,69 @@ document.addEventListener('DOMContentLoaded', () => {
     checkTelegram();
   }
 }, {once:true});
+
+const tajik = {"Каталог":"Феҳрист","Как оформить":"Тарзи фармоиш","Корзина":"Сабад","Мои заказы":"Фармоишҳои ман","ИГРЫ / TELEGRAM / STEAM":"БОЗИҲО / TELEGRAM / STEAM","Пополнение":"Пуркунӣ","в пару шагов.":"дар чанд қадам.","Игровая валюта, Telegram Stars и Premium в одном каталоге.":"Асъори бозӣ, Telegram Stars ва Premium дар як феҳрист.","Открыть каталог ↗":"Кушодани феҳрист ↗","Валюта TJS":"Асъор: сомонӣ","Ручная проверка оплаты":"Санҷиши пардохт аз ҷониби оператор","Сохранение черновика":"Нигоҳ доштани пешнавис","Выбрать пакет UC":"Интихоби бастаи UC","Выбрать звёзды":"Интихоби ситораҳо","Каталог пополнений":"Феҳристи пуркунӣ","Все товары":"Ҳамаи маҳсулот","Игры":"Бозиҳо","Платформы":"Платформаҳо","Найти игру или сервис":"Ҷустуҷӯи бозӣ ё хизматрасонӣ","Ничего не найдено. Попробуй другое название.":"Ҳеҷ чиз ёфт нашуд. Номи дигарро санҷ.","Как оформить заказ":"Тарзи сабти фармоиш","Выбери товар":"Маҳсулотро интихоб кун","Открой игру или сервис и укажи пакет.":"Бозӣ ё хизматрасониро кушо ва бастаро интихоб кун.","Заполни данные":"Маълумотро ворид кун","Укажи ID или имя пользователя.":"ID ё номи корбарро ворид кун.","Сохрани черновик":"Пешнависро нигоҳ дор","Он появится в разделе «Мои заказы».":"Он дар бахши «Фармоишҳои ман» пайдо мешавад.","Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.":"Дархостҳо дар таърихи ҳисоби Telegram нигоҳ дошта мешаванд. Пас аз муайян шудани нарх ва нашри реквизитҳо пардохт кардан мумкин аст.","Частые вопросы":"Саволҳои маъмул","Какие данные нужны для заказа?":"Барои фармоиш чӣ маълумот лозим аст?","Для Telegram укажи @username. Для игр и Steam укажи игровой ID или логин. Пароль вводить не нужно.":"Барои Telegram @username-ро ворид кун. Барои бозиҳо ва Steam ID ё логинро ворид кун. Рамзи махфӣ лозим нест.","Где найти сохранённый заказ?":"Фармоиши нигоҳдоштаро аз куҷо ёбам?","Открой «Мои заказы» в этом же браузере. Черновик можно изменить или удалить.":"Дар ҳамин браузер «Фармоишҳои ман»-ро кушо. Пешнависро тағйир додан ё нест кардан мумкин аст.","Можно ли оплатить заказ сейчас?":"Ҳоло фармоишро пардохт кардан мумкин аст?","Когда оператор назначит цену, реквизиты появятся в заказе. После перевода укажи номер операции.":"Вақте оператор нархро муайян мекунад, реквизитҳо дар фармоиш пайдо мешаванд. Пас аз интиқол рақами амалиётро ворид кун.","Профиль":"Профил","Аккаунт Telegram":"Ҳисоби Telegram","Вход через Mini App":"Воридшавӣ тавассути Mini App","Копировать":"Нусхабардорӣ","Скопировано":"Нусхабардорӣ шуд","Выдели ID вручную":"ID-ро дастӣ интихоб кун","История заявок и их статусы":"Таърихи дархостҳо ва ҳолати онҳо","Товары, которые ты выбрал":"Маҳсулоти интихобкардаи ту","Как оформить и оплатить заказ":"Тарзи сабт ва пардохти фармоиш","Открой магазин через @ShakhaDonatBot для входа.":"Барои ворид шудан мағозаро аз @ShakhaDonatBot кушо.","Открыть в Telegram":"Кушодан дар Telegram","Повторить вход":"Аз нав ворид шудан","Управление заказами":"Идоракунии фармоишҳо","Главная":"Асосӣ","Заказы":"Фармоишҳо","ЧЕРНОВИК ЗАКАЗА":"ПЕШНАВИСИ ФАРМОИШ","Выбери пакет":"Бастаро интихоб кун","Сумма пополнения в сомони":"Маблағи пуркунӣ бо сомонӣ","ID или имя пользователя":"ID ё номи корбар","Способ оплаты":"Тарзи пардохт","Перевод по реквизитам":"Интиқол бо реквизитҳо","Visa / Mastercard и другие банки":"Visa / Mastercard ва бонкҳои дигар","Ручной перевод по реквизитам. Доступность подтвердит оператор.":"Интиқол бо реквизитҳо. Дастрасиро оператор тасдиқ мекунад.","Реквизиты появятся после подтверждения цены. Оператор проверит перевод вручную.":"Реквизитҳо пас аз тасдиқи нарх пайдо мешаванд. Оператор интиқолро месанҷад.","Оформить заявку":"Сабти дархост","В корзину":"Ба сабад","Сохранить черновик":"Нигоҳ доштани пешнавис","Черновики хранятся в этом браузере.":"Пешнависҳо дар ҳамин браузер нигоҳ дошта мешаванд.","Отправленные заказы":"Фармоишҳои фиристодашуда","Черновики на устройстве":"Пешнависҳо дар дастгоҳ","Заказы клиентов":"Фармоишҳои муштариён","ИГРОВЫЕ ПОПОЛНЕНИЯ":"ПУРКУНИИ БОЗИҲО","Проверяем вход через Telegram…":"Воридшавӣ тавассути Telegram санҷида мешавад…","Входим через Telegram…":"Тавассути Telegram ворид мешавем…","✓ Аккаунт подтверждён через Telegram.":"✓ Ҳисоб тавассути Telegram тасдиқ шуд.","Каждый товар отправляется отдельной заявкой. Цену назначит оператор.":"Ҳар маҳсулот ҳамчун дархости алоҳида фиристода мешавад. Нархро оператор муайян мекунад.","Отправить заявки":"Фиристодани дархостҳо","Корзина пока пуста.":"Сабад ҳоло холӣ аст.","Заказов пока нет.":"Ҳоло фармоиш нест.","Черновиков пока нет.":"Ҳоло пешнавис нест.","Удалить":"Нест кардан","Изменить":"Тағйир додан","Новая заявка":"Дархости нав","Ожидает оплаты":"Дар интизори пардохт","Проверяется":"Дар ҳоли санҷиш","Оплата подтверждена":"Пардохт тасдиқ шуд","Выполнен":"Иҷро шуд","Отменён":"Бекор шуд","Игровые алмазы":"Алмосҳои бозӣ","Игровая валюта UC":"Асъори бозии UC","Звёзды Telegram":"Ситораҳои Telegram","Подписка Telegram":"Обунаи Telegram","Пополнение Robux":"Пуркунии Robux","Пополнение кошелька":"Пуркунии ҳамён","Кристаллы и подписка":"Кристаллҳо ва обуна","Цена по запросу":"Нарх бо дархост","По запросу":"Бо дархост","Стоимость уточнит оператор.":"Нархро оператор муайян мекунад.","Загрузка…":"Боргирӣ…","Отправляем заявку…":"Дархост фиристода мешавад…","Имя пользователя Telegram":"Номи корбари Telegram","Игровой ID":"ID-и бозӣ","ID игрока":"ID-и бозингар","Логин Steam":"Логини Steam","Закрыть":"Пӯшидан","На главную":"Ба саҳифаи асосӣ","Настройки":"Танзимот","Язык":"Забон","Тема":"Мавзӯъ","Светлая":"Равшан","Тёмная":"Торик","ИГРА":"БОЗӢ","ПЛАТФОРМА":"ПЛАТФОРМА","© 2026 SHAKHA DONAT · Независимый сервис":"© 2026 SHAKHA DONAT · Хизматрасонии мустақил"};
+const originalText = new WeakMap();
+const originalAttrs = new WeakMap();
+const preferences = {language:'ru',theme:'dark'};
+try {
+  const saved = JSON.parse(localStorage.getItem('shakha-appearance'));
+  if (saved?.language === 'tg') preferences.language = 'tg';
+  if (saved?.theme === 'light') preferences.theme = 'light';
+} catch {}
+function translateText(value) {
+  if (preferences.language !== 'tg') return value;
+  const trimmed = value.trim();
+  if (Object.hasOwn(tajik, trimmed)) return value.replace(trimmed, tajik[trimmed]);
+  const status = trimmed.split(' · ')[0];
+  if (trimmed.includes(' · ') && ['Новая заявка','Ожидает оплаты','Проверяется','Оплата подтверждена','Выполнен','Отменён'].includes(status)) return value.replace(status, tajik[status]);
+  if (trimmed.startsWith('Ориентир от ')) return value.replace('Ориентир от ', 'Тақрибан аз ');
+  return value;
+}
+function translateInterface() {
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (node.parentElement?.closest('script, style, svg, #profile-name, #profile-handle, #profile-id')) continue;
+    if (!originalText.has(node)) originalText.set(node, node.data);
+    const translated = translateText(originalText.get(node));
+    if (node.data !== translated) node.data = translated;
+  }
+  for (const element of document.querySelectorAll('[placeholder],[aria-label]')) {
+    const originals = originalAttrs.get(element) || {};
+    for (const key of ['placeholder','aria-label']) {
+      if (!element.hasAttribute(key)) continue;
+      const value = element.getAttribute(key);
+      const previous = originals[key];
+      const source = previous && value === previous.last ? previous.source : value;
+      const last = translateText(source);
+      if (value !== last) element.setAttribute(key, last);
+      originals[key] = {source,last};
+    }
+    originalAttrs.set(element, originals);
+  }
+}
+const appearanceObserver = new MutationObserver(refreshTranslations);
+function refreshTranslations() {
+  appearanceObserver.disconnect();
+  translateInterface();
+  appearanceObserver.observe(document.body, {childList:true,subtree:true,attributes:true,attributeFilter:['placeholder','aria-label']});
+}
+function applyAppearance() {
+  document.documentElement.lang = preferences.language;
+  document.documentElement.dataset.shopTheme = preferences.theme;
+  $('#shop-language').value = preferences.language;
+  $('#shop-theme').value = preferences.theme;
+  refreshTranslations();
+}
+for (const key of ['language','theme']) {
+  $('#shop-' + key).onchange = event => {
+    preferences[key] = event.target.value;
+    try { localStorage.setItem('shakha-appearance', JSON.stringify(preferences)); } catch {}
+    applyAppearance();
+  };
+}
+applyAppearance();
 </script>
 </body>
 </html>
