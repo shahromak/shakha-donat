@@ -1063,8 +1063,10 @@ function orderRow(order, paymentDetails, admin) {
     details.className = 'order-transfer';
     details.textContent = 'Переведи ' + money(order.price_minor) + ' · ' + (paymentNames[order.payment_method] || '') + '\n' + paymentDetails;
     row.insertBefore(details, actions);
-    const numbers = [...new Set((paymentDetails.match(/(?<![0-9])[0-9]{4}(?:[ \u00a0\u202f-]?[0-9]{4}){3}(?![0-9])/g) || [])
-      .map(number => number.replace(/\D/g, '')))];
+    const numbers = [...new Set(Array.from(
+      paymentDetails.matchAll(/(?:^|[^0-9])([0-9]{4}(?:[ \u00a0\u202f-]?[0-9]{4}){3})(?![0-9])/g),
+      match => match[1].replace(/\D/g, '')
+    ))];
     if (numbers.length === 1) {
       const copy = document.createElement('button');
       copy.type = 'button';
