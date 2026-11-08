@@ -237,7 +237,9 @@ app.get('/api/shop/settings', orderRoute(async (_req, res) => {
   const settings = await shopSettings();
   const {prices, banner, bannerImage = '', starsPrices = {}} = settings;
   const availablePayments = [...paymentMethods].filter(method => paymentInstructions(settings, method));
-  res.json({prices, starsPrices, banner, bannerImage, availablePayments});
+  const payableStarsPrices = {...starsPrices};
+  delete payableStarsPrices['Telegram Stars'];
+  res.json({prices, starsPrices:payableStarsPrices, banner, bannerImage, availablePayments});
 }));
 app.get('/api/admin/settings', auth, adminOnly, orderRoute(async (_req, res) => {
   res.json({settings:await shopSettings(), catalog:Object.fromEntries(products), methods:[...paymentMethods]});
@@ -283,6 +285,7 @@ app.get('/api/orders/:id', auth, orderRoute(async (req, res) => {
 }));
 app.post('/api/orders/stars', auth, orderRoute(async (req,res) => {
   const {id,product,pack,account,confirmedStars} = req.body || {};
+  if (product === 'Telegram Stars') return res.status(409).json({error:'Покупка Telegram Stars временно недоступна.'});
   if (!BOT_TOKEN) return res.status(503).json({error:'Оплата Stars пока недоступна'});
   if (typeof id !== 'string' || !uuid.test(id) || !products.get(product)?.includes(pack) ||
       typeof account !== 'string' || !account.trim() || account.trim().length > 80) {
