@@ -1260,6 +1260,9 @@ async function checkTelegram() {
     if (isAdmin && location.hash === '#manage') openShopSettings();
     if (isAdmin && location.hash === '#admin') $('#admin-orders').click();
     if (isAdmin && location.hash === '#users') $('#owner-users').click();
+    if (location.hash === '#orders' && !$('#history').open) showHistory();
+    if (location.hash === '#support' && !$('#support-dialog').open) openSupport(false);
+    if (location.hash === '#language') $('#shop-settings-title').scrollIntoView({block:'start'});
   } catch (error) {
     $('#telegram-status').textContent = error.message;
     button.hidden = false;
@@ -1341,7 +1344,7 @@ $('#add-cart').onclick = () => {
 };
 renderCart();
 function showScreen() {
-  const profile = ['#profile','#admin','#manage','#users'].includes(location.hash);
+  const profile = ['#profile','#admin','#manage','#users','#orders','#support','#language'].includes(location.hash);
   const faq = location.hash === '#shop-faq';
   for (const link of document.querySelectorAll('.store-nav a[href="#"],.store-nav a[href="#catalog"]')) {
     const active = !profile && !faq && (link.getAttribute('href') === '#' ? !location.hash : link.hash === location.hash);
