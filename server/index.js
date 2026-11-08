@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import pg from 'pg';
 import 'dotenv/config';
 import express from 'express';
@@ -534,17 +535,18 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=catalog-retry';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=bot-menu';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
   : '';
 
 async function telegramCall(method, body = {}) {
+  const multipart = body instanceof FormData;
   const response = await fetch('https://api.telegram.org/bot' + BOT_TOKEN + '/' + method, {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify(body),
+    headers:multipart ? undefined : {'Content-Type':'application/json'},
+    body:multipart ? body : JSON.stringify(body),
     signal:AbortSignal.timeout(8000)
   });
   const result = await response.json();
@@ -634,25 +636,55 @@ app.post(webhookPath, async (req, res) => {
   if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
   const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
   const isAdmin = String(message.from?.id) === ADMIN_ID;
-  const buttons = [[{text:'Открыть магазин', web_app:{url:shopUrl}}]];
+  const link = (text, hash = '') => ({text,web_app:{url:shopUrl + hash}});
+  const buttons = [
+    [link('🎮 Каталог пополнений','#catalog')],
+    [link('📦 Мои заказы','#orders'),link('👤 Профиль','#profile')],
+    [link('💬 Поддержка','#support'),link('🌐 Язык','#language')]
+  ];
   if (isAdmin) {
-    buttons.push([{text:'Панель администратора', web_app:{url:shopUrl + '#admin'}}]);
-    buttons.push([{text:'Пользователи', web_app:{url:shopUrl + '#users'}}]);
-    buttons.push([{text:'Настройки магазина', web_app:{url:shopUrl + '#manage'}}]);
+    buttons.push([link('Панель администратора','#admin'),link('Пользователи','#users')]);
+    buttons.push([link('Настройки магазина','#manage')]);
   }
+  const welcome = !['/admin','/orders','/help','/paysupport'].includes(command);
+  const firstName = typeof message.from?.first_name === 'string' ? message.from.first_name.trim().slice(0,60) : '';
   const reply = command === '/admin'
-    ? (isAdmin ? 'Панель администратора SHAKHA DONAT. Здесь можно назначать цену, проверять оплату и управлять заказами.' : 'Эта команда доступна только администратору.')
+    ? (isAdmin ? 'Панель администратора SHAKHA DONAT. Управляй заказами, ценами и настройками магазина.' : 'Эта команда доступна только администратору.')
     : command === '/paysupport'
-      ? 'По вопросам оплаты открой магазин → Профиль → Поддержка. Укажи код заказа и опиши проблему.'
-      : command === '/help'
-    ? 'Открой магазин, выбери товар и отправь заявку. Её статус появится в разделе «Заказы».'
-    : command === '/orders'
-      ? 'История заявок доступна в разделе «Заказы» внутри магазина.'
-      : '⚡ Добро пожаловать в SHAKHA DONAT!\n\nПополняй игры, покупай Telegram Stars и оформляй Telegram Premium в одном магазине.\n\nНажми «Открыть магазин», выбери товар и оформи заявку. Статус можно посмотреть в разделе «Заказы».';
+      ? 'Нажми «Поддержка», укажи код заказа и опиши проблему с оплатой.'
+      : command === '/orders'
+        ? 'Нажми «Мои заказы», чтобы посмотреть историю и статусы.'
+        : command === '/help'
+          ? 'Открой каталог, выбери товар и укажи получателя. Статус появится в разделе «Мои заказы».'
+          : [
+            '👋 Привет' + (firstName ? ', ' + firstName : '') + '!',
+            '',
+            'SHAKHA DONAT — пополнение игр и цифровые товары.',
+            '',
+            '🎮 PUBG Mobile, Free Fire, Mobile Legends и другие игры',
+            '⭐ Telegram Stars и Premium',
+            '📦 История заказов и связь с поддержкой',
+            '',
+            'Выбирай раздел ниже.'
+          ].join('\n');
   try {
+    const keyboard = {inline_keyboard:buttons};
+    if (welcome) {
+      try {
+        const photo = Buffer.from(readFileSync(new URL('./welcome-banner.base64',import.meta.url),'utf8'),'base64');
+        const form = new FormData();
+        form.append('chat_id',String(message.chat.id));
+        form.append('photo',new Blob([photo],{type:'image/jpeg'}),'welcome.jpg');
+        form.append('caption',reply);
+        form.append('reply_markup',JSON.stringify(keyboard));
+        await telegramCall('sendPhoto',form);
+        return res.sendStatus(200);
+      } catch {
+        console.warn('SHAKHA DONAT: welcome banner was not delivered');
+      }
+    }
     await telegramCall('sendMessage', {
-      chat_id:message.chat.id, text:reply,
-      reply_markup:{inline_keyboard:buttons}
+      chat_id:message.chat.id, text:reply, reply_markup:keyboard
     });
     return res.sendStatus(200);
   } catch {
