@@ -49,7 +49,9 @@ const products = new Map(Object.entries({
     "60 UC",
     "325 UC",
     "660 UC",
-    "1800 UC"
+    "1800 UC",
+    "3850 UC",
+    "8100 UC"
   ],
   "Free Fire": [
     "100 алмазов",
@@ -154,6 +156,13 @@ function orderRoute(handler, fallback) {
           FROM jsonb_each(COALESCE(data->currency,'{}'::jsonb)) AS product_prices(product,packs)
         ), '{}'::jsonb))
         FROM (VALUES ('prices'), ('starsPrices')) AS currencies(currency)
+      ) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run);
+      WITH first_run AS (
+        INSERT INTO storefront_catalog_migrations(name) VALUES ('pubg-market-plus-six-2026-11-08')
+        ON CONFLICT DO NOTHING RETURNING name
+      )
+      UPDATE storefront_settings SET data=jsonb_set(data,'{prices,PUBG Mobile}',
+        COALESCE(data->'prices'->'PUBG Mobile','{}'::jsonb) || '{"60 UC":1124,"325 UC":5565,"660 UC":11141,"1800 UC":27825,"3850 UC":55650,"8100 UC":111279}'::jsonb
       ) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
@@ -525,7 +534,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=bank-mini';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=pubg-uc';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
