@@ -1063,6 +1063,36 @@ function orderRow(order, paymentDetails, admin) {
     details.className = 'order-transfer';
     details.textContent = 'Переведи ' + money(order.price_minor) + ' · ' + (paymentNames[order.payment_method] || '') + '\n' + paymentDetails;
     row.insertBefore(details, actions);
+    const numbers = [...new Set((paymentDetails.match(/(?<![0-9])[0-9]{4}(?:[ \u00a0\u202f-]?[0-9]{4}){3}(?![0-9])/g) || [])
+      .map(number => number.replace(/\D/g, '')))];
+    if (numbers.length === 1) {
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.textContent = 'Скопировать номер карты';
+      copy.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(numbers[0]);
+          copy.textContent = 'Номер скопирован';
+        } catch {
+          const field = document.createElement('textarea');
+          field.value = numbers[0];
+          field.readOnly = true;
+          field.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none';
+          row.append(field);
+          try {
+            field.select();
+            field.setSelectionRange(0,field.value.length);
+            copy.textContent = document.execCommand('copy') ? 'Номер скопирован' : 'Скопируй номер вручную';
+          } catch {
+            copy.textContent = 'Скопируй номер вручную';
+          } finally {
+            field.remove();
+            copy.focus({preventScroll:true});
+          }
+        }
+      };
+      actions.append(copy);
+    }
     addAction(actions, 'Подтвердить платёж', () => openReceipt(order));
   }
   if (!admin && order.status === 'awaiting_payment' && order.stars_amount) {
@@ -1350,6 +1380,7 @@ Object.assign(tajik, {"Проверить заказ":"Санҷидани фар
 Object.assign(tajik, {'Оплата в Telegram Stars':'Пардохт бо Telegram Stars','Этот пакет пока недоступен к покупке.':'Ин баста ҳоло барои харид дастрас нест.','Для оплаты открой магазин через бота.':'Барои пардохт мағозаро аз бот кушо.','Открыть товар':'Кушодани маҳсулот','Недоступно':'Ба наздикӣ','Цены в сомони':'Нархҳо бо сомонӣ','На витрине цены в сомони. Сумма списания указана в Stars.':'Нархҳо дар феҳрист бо сомонӣ ва маблағи пардохт бо Stars нишон дода мешаванд.','Для доступных пакетов цена указана в каталоге.':'Нархи бастаҳои дастрас дар феҳрист нишон дода мешавад.'});
 Object.assign(tajik, {'Открыть сайт в браузере ↗':'Кушодани сомона дар браузер ↗'});
 Object.assign(tajik, {'Повторить загрузку':'Аз нав бор кардан','Загружаем цены и способы оплаты…':'Нархҳо ва тарзҳои пардохт бор мешаванд…','Сервер магазина не ответил. Попробуй загрузить данные ещё раз.':'Сервери мағоза ҷавоб надод. Аз нав кӯшиш кун.','Не удалось проверить реквизиты':'Санҷидани реквизитҳо имкон нашуд','Проверяем реквизиты…':'Реквизитҳоро месанҷем…','Цена не загрузилась':'Нарх бор нашуд','Загрузка цены…':'Нарх бор мешавад…'});
+Object.assign(tajik, {'Скопировать номер карты':'Нусхабардории рақами корт','Номер скопирован':'Рақам нусхабардорӣ шуд','Скопируй номер вручную':'Рақамро дастӣ нусхабардорӣ кун'});
 const originalText = new WeakMap();
 const originalAttrs = new WeakMap();
 const preferences = {language:'ru',theme:'dark'};
