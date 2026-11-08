@@ -1,37 +1,53 @@
 <!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>SHAKHA DONAT — Оплата в сомони</title>
 <style>
-:root{color-scheme:dark;font:16px system-ui;color:#eaf2ff;background:#101827}*{box-sizing:border-box}body{margin:0;padding:24px 14px}main{max-width:550px;margin:auto}section{background:#17263b;border:1px solid #3a4c68;border-radius:20px;padding:20px;margin:16px 0}h1{font-size:clamp(26px,7vw,38px);margin-bottom:5px}p{line-height:1.45;color:#b9c8dd}label{display:grid;gap:6px;margin:12px 0}input,select,button{width:100%;min-height:46px;border:1px solid #455873;border-radius:10px;background:#101827;color:inherit;font:inherit;padding:9px}button{background:#316cdb;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:default}button+button{margin-top:8px}strong{color:#a3c6ff}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101827;padding:12px;border-radius:10px}#message{overflow-wrap:anywhere}small{color:#b9c8dd}
-
-:root{color-scheme:light;color:#182a48;background:#eaf0f9}
-section{background:#f7f9fd;border-color:#ccd8ec;box-shadow:0 16px 42px #23395b16}
-p,small{color:#405572}input,select,pre{background:#fff;border-color:#b9c8de;color:#182a48}
-strong{color:#285aa8}fieldset{border:0;padding:0;margin:18px 0;min-width:0}legend{font-size:1.17rem;font-weight:750;margin-bottom:10px}
-.step{display:inline-grid;place-items:center;background:#294778;color:white;width:30px;height:30px;border-radius:8px;margin-right:8px;font-size:.93rem}
-.pack-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-.choice{display:grid;position:relative;align-items:center;gap:10px;border:1px solid #c7d5e9;border-radius:15px;background:#fff;padding:12px;margin:0 0 8px;cursor:pointer}
-.choice:has(:checked){border-color:#417cef;box-shadow:0 0 0 1px #6192fa,0 7px 18px #1c64da18}
-.choice:has(:disabled){cursor:default;background:#f1f4fa}
-.choice:has(:focus-visible){outline:2px solid #235dd6;outline-offset:2px}
-.choice input{width:19px;min-height:19px;margin:0;padding:0;accent-color:#3675e8}
+:root{color-scheme:light;--bg:#edf3fc;--panel:#f7faff;--card:#fff;--ink:#172745;--muted:#4c607d;--border:#c4d2e9;--accent:#245dbb;--selected:#eaf3ff;--step:#244478;font:16px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+@media(prefers-color-scheme:dark){:root{color-scheme:dark;--bg:#0c1526;--panel:#14223a;--card:#192a45;--ink:#f1f5ff;--muted:#b4c2da;--border:#3a4c6d;--accent:#a1c5ff;--selected:#233b64;--step:#254d87}}
+*{box-sizing:border-box} [hidden]{display:none!important}
+body{margin:0;min-height:100dvh;padding:clamp(16px,5vw,50px) 14px;background:radial-gradient(ellipse at 50% 0%,#4f88ed26,transparent 40rem),var(--bg);color:var(--ink)}
+main{max-width:620px;margin:auto}
+.brand-bar{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.brand-logo{display:grid;place-items:center;width:46px;height:46px;flex:none;border-radius:14px;background:linear-gradient(140deg,#376fd8,#214381);color:white;box-shadow:0 8px 18px #183d892f}
+.brand-bar b,.brand-bar small{display:block}.brand-bar b{letter-spacing:.045em}.brand-bar small{font-size:.78rem;color:var(--muted)}
+section{background:var(--panel);border:1px solid var(--border);border-radius:24px;padding:clamp(16px,4vw,28px);box-shadow:0 18px 52px #13294f21;margin:0 0 12px}
+h1,h2{line-height:1.15;margin:0 0 8px;letter-spacing:-.035em}h1{font-size:clamp(27px,6vw,38px)}h2{font-size:26px}
+p{margin:8px 0;color:var(--muted)}small{color:var(--muted)}label{display:grid;gap:7px;margin:14px 0}
+input,select,button{width:100%;min-height:48px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;padding:10px 12px}
+button{font-weight:750;cursor:pointer}button:disabled{opacity:.55;cursor:default}button+button{margin-top:8px}
+:focus-visible,.choice:has(:focus-visible){outline:2px solid #4388ef;outline-offset:3px}
+strong{color:var(--accent)}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--border);padding:13px;border-radius:12px}#message,#code,#summary{overflow-wrap:anywhere}
+fieldset{border:0;padding:0;margin:19px 0;min-width:0}legend,.step-title{font-size:1.12rem;font-weight:800;margin-bottom:10px}
+.step{display:inline-grid;place-items:center;background:var(--step);color:#edf5ff;width:30px;height:30px;border-radius:9px;margin-right:9px;font-size:.9rem}
+.pack-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.choice{display:grid;position:relative;align-items:center;gap:10px;border:1px solid var(--border);border-radius:15px;background:var(--card);padding:12px;margin:0 0 8px;cursor:pointer}
+.choice:has(:checked){background:var(--selected);border-color:#5a96f8;box-shadow:0 0 0 1px #6da4ff,0 7px 18px #1c64da20}
+.choice:has(:disabled){cursor:default}.choice:has(:disabled) .bank-icon{opacity:.68}
+.choice input{width:19px;min-height:19px;margin:0;padding:0;accent-color:#3777e9}
 .pack-choice input{position:absolute;opacity:0}
-.pack-choice{gap:6px;min-height:77px;margin:0;align-content:center;overflow-wrap:anywhere}
-.pack-choice strong{font-size:.95rem}.bank-choice{grid-template-columns:42px minmax(0,1fr) 19px}
-.bank-choice small{display:block;margin-top:3px}.bank-icon{display:grid;place-items:center;width:42px;height:42px;background:#174a6a;color:white;border-radius:12px;font-weight:850}.bank-icon[data-bank=alif]{background:#176354}.bank-icon[data-bank=dc]{background:#204674}
-#create{min-height:51px;background:linear-gradient(120deg,#367ce9,#245acb);box-shadow:0 8px 18px #245acb35}
-</style></head><body><main><h1>SHAKHA DONAT</h1><p>Банковский перевод в сомони</p>
-<section id="checkout" hidden><form id="order-form" method="post"><label>Товар<select id="product" required></select></label>
+.pack-choice{gap:4px;min-height:79px;margin:0;align-content:center;overflow-wrap:anywhere}.pack-choice strong{font-size:.96rem}
+.bank-choice{grid-template-columns:44px minmax(0,1fr) 19px;min-height:76px}
+.bank-choice small{display:block;margin-top:3px;line-height:1.3}
+.bank-icon{display:grid;place-items:center;width:44px;height:44px;background:#174a6a;color:#d1eeff;border-radius:12px;font-weight:850}.bank-icon[data-bank=alif]{background:linear-gradient(145deg,#237966,#10473c);color:#cbfff0}.bank-icon[data-bank=dc]{background:#204674}
+.summary-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0 10px;padding:12px;background:var(--selected);border:1px solid var(--border);border-radius:13px}.summary-bar strong{white-space:nowrap}
+#create,#upload{min-height:50px;color:white;background:linear-gradient(120deg,#347be7,#245acb);border-color:#4385ec;box-shadow:0 8px 18px #245acb35}
+#status{display:inline-block;background:var(--selected);color:var(--accent);font-weight:750;border-radius:10px;padding:6px 10px}
+</style></head><body><main><header class="brand-bar"><span class="brand-logo" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-8 12h6l-1 8 9-12h-6z"/></svg></span><span><b>SHAKHA DONAT</b><small>Оплата в сомони</small></span></header>
+<section id="checkout" hidden><h1>Оформление заказа</h1><p>Выбери пакет, укажи получателя и способ перевода.</p><form id="order-form" method="post"><label>Товар<select id="product" required></select></label>
 <fieldset><legend><span class="step" aria-hidden="true">1</span>Выбери пакет</legend><div id="packs" class="pack-options"></div></fieldset>
 <label><span><span class="step" aria-hidden="true">2</span><b>Данные получателя</b></span><input id="account" placeholder="Игровой ID, логин Steam или @username" maxlength="80" required></label>
 <fieldset><legend><span class="step" aria-hidden="true">3</span>Способ оплаты</legend><div id="banks"></div></fieldset>
 <p>Реквизиты появятся после оформления. Переводи деньги только по реквизитам, указанным в заказе.</p>
-<p><strong id="price" aria-live="polite"></strong></p><button id="create" type="submit">→ Оформить заявку</button></form></section>
+<div class="summary-bar"><span>К переводу</span><strong id="price" aria-live="polite">—</strong></div><button id="create" type="submit">→ Оформить заявку</button></form></section>
 <section id="order" hidden><h2>Заказ</h2><p id="summary"></p><p id="code"></p><p id="status"></p><div id="transfer" hidden><p>Переведи указанную сумму и загрузи чек. Оплату проверяет оператор.</p><pre id="details"></pre><form id="receipt" method="post"><label>Чек JPG, PNG или PDF, до 3 МБ<input id="file" type="file" accept="image/png,image/jpeg,application/pdf" required></label><button id="upload">Отправить чек</button></form></div><button id="refresh" type="button">Обновить статус</button><button id="finish" type="button" hidden>Новый заказ</button><p><small>Чтобы открыть этот заказ снова, используй тот же браузер.</small></p></section>
 <p id="message" role="status">Загружаем каталог…</p></main>
 <script>
 const $ = id => document.getElementById(id);
 const storageKey = 'shakha-bank-order-v1';
 const bankLabels = {alif:'Алиф',dc:'Душанбе Сити',other:'Другие банки'};
-const bankIcons = {alif:'A',dc:'DC',other:'▤'};
+const bankIcons = {
+  alif:'<path d="M18 5a8 8 0 1 0 1 14M8 16l4-9 4 9m-6-3h4"/>',
+  dc:'<path d="M4 7h7a5 5 0 0 1 0 10H4zM21 7h-3a5 5 0 0 0 0 10h3"/>',
+  other:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18m-14 5h4"/>'
+};
 const statuses = {awaiting_payment:'Ожидает перевода или нового чека',review:'Чек проверяется',paid:'Оплата подтверждена',completed:'Заказ выполнен',cancelled:'Заказ отменён'};
 const money = minor => new Intl.NumberFormat('ru',{minimumFractionDigits:2,maximumFractionDigits:2}).format(minor / 100) + ' TJS';
 let catalog, active;
@@ -52,7 +68,7 @@ async function request(path, body, order) {
 const picked = name => $('order-form').querySelector('input[name="' + name + '"]:checked')?.value || '';
 function showPrice() {
   const price = catalog.prices[$('product').value]?.[picked('pack')];
-  $('price').textContent = price ? 'К переводу ' + money(price) : '';
+  $('price').textContent = price ? money(price) : '—';
 }
 function showPacks() {
   $('packs').replaceChildren(...Object.entries(catalog.prices[$('product').value] || {}).map(([pack,price],i) => {
@@ -84,7 +100,7 @@ async function showCatalog() {
     icon.className = 'bank-icon';
     icon.dataset.bank = bank;
     icon.setAttribute('aria-hidden','true');
-    icon.textContent = bankIcons[bank];
+    icon.innerHTML = '<svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + bankIcons[bank] + '</svg>';
     const copy = document.createElement('span');
     const title = document.createElement('b');
     title.textContent = name;
