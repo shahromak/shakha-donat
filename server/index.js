@@ -311,14 +311,67 @@ app.post('/api/orders/stars', auth, orderRoute(async (req,res) => {
   });
   res.json({id,invoice});
 }));
-const starsOnlyError = 'Новые заказы оплачиваются в Telegram Stars.';
-app.post('/api/orders/quote', auth, (_req, res) => res.status(409).json({error:starsOnlyError}));
+function checkoutPrice(settings, product, pack) {
+  const price = settings.prices?.[product]?.[pack];
+  return Number.isInteger(price) && price > 0 ? price : null;
+}
+app.post('/api/orders/quote', auth, orderRoute(async (req,res) => {
+  const {product, pack, paymentMethod} = req.body || {};
+  if (!products.get(product)?.includes(pack) || !paymentMethods.has(paymentMethod)) {
+    return res.status(400).json({error:'Проверь пакет и способ оплаты'});
+  }
+  const settings = await shopSettings();
+  const priceMinor = checkoutPrice(settings, product, pack);
+  if (!priceMinor) return res.status(409).json({error:'Цена этого пакета ещё не задана. Напиши в поддержку.'});
+  if (!paymentInstructions(settings, paymentMethod)) return res.status(409).json({error:'Для выбранного банка ещё нет реквизитов'});
+  res.json({priceMinor});
+}));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
-  const {id} = req.body || {};
-  if (typeof id !== 'string' || !uuid.test(id)) return res.status(400).json({error:'Проверь код заказа.'});
-  const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
-  if (existing.rowCount) return res.json({id});
-  res.status(409).json({error:starsOnlyError});
+  const {id, product, pack, account, amount, paymentMethod = null, confirmedPriceMinor = null} = req.body || {};
+  if (typeof id !== 'string' || !uuid.test(id) || !products.get(product)?.includes(pack) ||
+      (paymentMethod !== null && !paymentMethods.has(paymentMethod)) ||
+      typeof account !== 'string' || !account.trim() || account.trim().length > 80 ||
+      (product === 'Steam' && (typeof amount !== 'number' || amount < 0.01 || amount > 100000))) {
+    return res.status(400).json({error:'Проверь товар, пакет, сумму и ID аккаунта'});
+  }
+  let priceMinor = null;
+  let snapshot = null;
+  if (confirmedPriceMinor !== null) {
+    const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
+    if (existing.rowCount) return res.json({id});
+    const settings = await shopSettings();
+    priceMinor = checkoutPrice(settings, product, pack);
+    snapshot = paymentInstructions(settings, paymentMethod);
+    if (!priceMinor || priceMinor !== confirmedPriceMinor || !paymentMethods.has(paymentMethod) || !snapshot) {
+      return res.status(409).json({error:'Цена или реквизиты изменились. Открой оформление заново.'});
+    }
+  }
+  const {rows} = await database.query(
+    'INSERT INTO storefront_orders (id, customer_id, product, package, account, amount, payment_method, status, price_minor, payment_details_snapshot) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) ON CONFLICT (id) DO NOTHING RETURNING id',
+    [id, req.telegramUser.id, product, pack, account.trim(), product === 'Steam' ? amount : null, paymentMethod, priceMinor ? 'awaiting_payment' : 'new', priceMinor, snapshot]
+  );
+  if (!rows.length) {
+    const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id, req.telegramUser.id]);
+    if (!existing.rows.length) return res.status(409).json({error:'Не удалось создать заявку'});
+  }
+  res.status(rows.length ? 201 : 200).json({id});
+  if (rows.length && BOT_TOKEN) {
+    const lines = [
+      '✅ Заявка принята',
+      '',
+      'Код заказа: ' + id,
+      'Товар: ' + product,
+      'Пакет: ' + (product === 'Steam' ? amount + ' TJS' : pack),
+      priceMinor ? 'Статус: ожидает оплаты' : 'Статус: новая заявка',
+      '',
+      'Проверить статус можно в разделе «Заказы».'
+    ];
+    void telegramCall('sendMessage', {
+      chat_id:req.telegramUser.id,
+      text:lines.join('\n'),
+      reply_markup:{inline_keyboard:[[{text:'Открыть магазин', web_app:{url:shopUrl}}]]}
+    }).catch(() => console.warn('SHAKHA DONAT: order notification was not delivered'));
+  }
 }));
 app.post('/api/orders/:id/method', auth, orderRoute(async (req,res) => {
   const method = req.body?.paymentMethod;
@@ -471,7 +524,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=prices-tjs';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=bank-mini';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
