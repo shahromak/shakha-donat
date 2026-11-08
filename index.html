@@ -220,6 +220,26 @@ label.checkout-step input{grid-column:1/-1}
   .filters{gap:6px}.filters button{font-size:12px;padding-inline:10px}
 }
 @media(max-width:350px){.brand{font-size:14px}.hero .art{width:61%;height:125px}}
+
+.featured.featured-rail{display:grid;grid-auto-flow:column;grid-auto-columns:clamp(145px,23vw,245px);grid-template-columns:none;overflow-x:auto;scroll-snap-type:x mandatory;padding:3px 3px 10px;margin-bottom:22px;scroll-padding-inline:3px}
+.featured.featured-rail button{display:block;padding:0;overflow:hidden;scroll-snap-align:start;border-radius:17px;background:var(--store-surface);border-color:var(--store-border)}
+.featured-rail .cover{display:block;height:auto;aspect-ratio:1.22}
+.featured-rail .featured-caption{display:block;padding:12px}
+.track-panel{padding:clamp(16px,4vw,26px);border:1px solid var(--store-border);border-radius:19px;background:var(--store-surface)}
+.track-panel h2,.store-benefits h2{display:flex;align-items:center;gap:10px}
+.track-panel h2 svg,.store-benefits h2 svg{color:var(--shop-blue);flex:none}
+.track-panel form{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:9px}
+.track-panel input{min-height:49px;background:#101827}.track-panel form button{display:grid;place-items:center;padding:0}
+[data-shop-theme=light] .track-panel input{background:#f6f9ff;color:#162746}
+#track-result:not([hidden]){margin-top:12px;padding:12px;border:1px solid var(--store-border);border-radius:12px;overflow-wrap:anywhere}
+#track-result p{margin:5px 0 0;color:var(--dim)}
+.store-benefits{margin:26px 0 34px}.benefit-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.benefit-grid article{margin:0;background:var(--store-surface);border:1px solid var(--store-border);border-radius:16px;padding:clamp(13px,3vw,22px)}
+.benefit-grid h3{margin:12px 0 6px;font-size:clamp(15px,2vw,18px)}.benefit-grid p{margin:0;font-size:13px}
+.benefit-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:#348aff21;color:var(--shop-blue)}
+.benefit-grid article:nth-child(even) .benefit-icon{background:#13b4ca20;color:#35c7db}
+[data-shop-theme=light] .benefit-grid article:nth-child(even) .benefit-icon{color:#076779}
+@media(max-width:700px){.benefit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.featured.featured-rail{grid-auto-columns:clamp(140px,43vw,225px)}}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 <link rel="stylesheet" href="catalog-covers.css?v=1">
@@ -237,9 +257,16 @@ label.checkout-step input{grid-column:1/-1}
 </svg>
 </section>
 <div class="info"><span class="chip"><b>◇</b> Валюта TJS</span><span class="chip"><b>✓</b> Ручная проверка оплаты</span><span class="chip"><b>▣</b> Сохранение черновика</span></div>
-<section class="featured" aria-label="Быстрый выбор">
-<button data-feature="PUBG Mobile"><i aria-hidden="true"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4h10l4 6-9 10-9-10zm-4 6h18m-14-6 5 16 5-16"/></svg></i><span><b>PUBG Mobile</b><small>Выбрать пакет UC</small></span><span class="go" aria-hidden="true">↗</span></button>
-<button data-feature="Telegram Stars"><i aria-hidden="true"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg></i><span><b>Telegram Stars</b><small>Выбрать звёзды</small></span><span class="go" aria-hidden="true">↗</span></button>
+<section class="featured featured-rail" aria-label="Быстрый выбор"><button type="button" data-feature="PUBG Mobile"><span class="cover" aria-hidden="true"></span><span class="featured-caption"><b>PUBG Mobile</b><small></small></span></button><button type="button" data-feature="Free Fire"><span class="cover" aria-hidden="true"></span><span class="featured-caption"><b>Free Fire</b><small></small></span></button><button type="button" data-feature="Mobile Legends"><span class="cover" aria-hidden="true"></span><span class="featured-caption"><b>Mobile Legends</b><small></small></span></button><button type="button" data-feature="Telegram Premium"><span class="cover" aria-hidden="true"></span><span class="featured-caption"><b>Telegram Premium</b><small></small></span></button></section>
+<section id="track-order" class="track-panel" aria-labelledby="track-title">
+<h2 id="track-title"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h8l4 4v14H6zM14 3v5h4M9 12h6m-6 4h6"/></svg><span>Проверить заказ</span></h2>
+<p class="note">Введи код из сообщения бота или раздела «Заказы».</p>
+<form id="track-form"><input id="track-code" aria-label="Код заказа" placeholder="Код заказа" maxlength="80" required spellcheck="false" autocapitalize="off" autocomplete="off"><button class="primary" type="submit" aria-label="Проверить заказ"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6"/></svg></button></form>
+<div id="track-result" role="status" hidden></div>
+</section>
+<section class="store-benefits" aria-labelledby="benefits-title">
+<h2 id="benefits-title"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/></svg><span>Почему выбирают SHAKHA DONAT</span></h2>
+<div class="benefit-grid"><article><div class="benefit-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 10-12h-8z"/></svg></div><h3>Игры и Telegram</h3><p class="note">Пополнения, Stars и Premium в одном каталоге.</p></article><article><div class="benefit-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 8 3v6c0 4-4 7-8 9-4-2-8-5-8-9V6zm-3 9 2 2 4-4"/></svg></div><h3>Оплата по заказу</h3><p class="note">Способ оплаты и сумма видны перед подтверждением.</p></article><article><div class="benefit-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h8l10 10-7 7L3 10zm4 4h.01"/></svg></div><h3>Цены в сомони</h3><p class="note">Если цена ещё не задана, её уточнит оператор.</p></article><article><div class="benefit-icon"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v12H9l-5 4zm4 6h8"/></svg></div><h3>Поддержка</h3><p class="note">Напиши оператору из профиля, если нужна помощь.</p></article></div>
 </section>
 <section id="catalog"><div class="heading"><div><div class="section-kicker">ВЫБЕРИ СЕРВИС</div><h2>Каталог пополнений</h2></div><label class="catalog-search"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><input id="search" type="search" placeholder="Найти игру или сервис" aria-label="Поиск товаров"></label></div><div class="filters" aria-label="Категории"><button class="active" data-cat="all">Все товары</button><button data-cat="game">Игры</button><button data-cat="telegram">Telegram</button><button data-cat="platform">Платформы</button><button data-cat="favorites">Избранное</button></div><p class="catalog-count"><span>Найдено</span> <output id="catalog-count" aria-live="polite"></output></p><div class="grid" id="cards"></div><p class="note" id="empty" hidden>Ничего не найдено. Попробуй другое название.</p><p class="note" id="favorites-empty" hidden>Нажми на сердце на карточке, чтобы сохранить товар.</p></section>
 <section class="how" id="how"><h2>Как оформить заказ</h2><div class="steps"><p><strong><span>01</span>Выбери товар</strong>Открой игру или сервис и укажи пакет.</p><p><strong><span>02</span>Заполни данные</strong>Укажи ID или имя пользователя.</p><p><strong><span>03</span>Сохрани черновик</strong>Он появится в разделе «Мои заказы».</p></div><p class="note">Заявки сохраняются в истории Telegram-аккаунта. Оплата доступна после назначения цены и публикации реквизитов.</p></section>
@@ -644,6 +671,12 @@ function matchesCatalog(product, filter, term) {
   const searchable = normalizeSearch([name, description, searchAliases[name]].join(' '));
   return normalizeSearch(term).split(' ').every(word => searchable.includes(word));
 }
+for (const button of document.querySelectorAll('.featured-rail [data-feature]')) {
+  const name = button.dataset.feature;
+  const product = products.find(entry => entry[0] === name);
+  button.querySelector('.cover').dataset.cover = coverIndex.get(name);
+  button.querySelector('small').textContent = product[1];
+}
 function renderCatalog() {
   const term = $('#search').value.trim();
   const matches = products.filter(product => matchesCatalog(product, category, term));
@@ -807,6 +840,32 @@ async function api(path, body) {
   if (!response.ok) throw new Error(response.status === 401 ? 'Закрой Mini App и открой его заново через бота.' : data.error || 'Запрос не выполнен.');
   return data;
 }
+$('#track-form').onsubmit = async event => {
+  event.preventDefault();
+  const code = $('#track-code').value.trim();
+  const button = event.submitter || $('#track-form button');
+  const result = $('#track-result');
+  result.hidden = false;
+  if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(code)) {
+    result.textContent = 'Вставь полный код отправленного заказа.';
+    return;
+  }
+  if (button.disabled) return;
+  button.disabled = true;
+  result.textContent = 'Загрузка…';
+  try {
+    const {order} = await api('/orders/' + encodeURIComponent(code));
+    const title = document.createElement('strong');
+    title.textContent = order.product + ' · ' + (order.amount ? order.amount + ' TJS' : order.package);
+    const status = document.createElement('p');
+    status.textContent = labels[order.status] || 'Статус уточняется';
+    result.replaceChildren(title, status);
+  } catch (error) {
+    result.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+};
 let pending;
 async function quoteOrder(order) {
   const {priceMinor} = await api('/orders/quote', {
@@ -1290,6 +1349,7 @@ Object.assign(tajik, {'Панель администратора':'Панели 
 Object.assign(tajik, {'Управление магазином':'Идоракунии мағоза','Только для владельца':'Танҳо барои соҳиб','Цены, проверка оплаты и статусы':'Нархҳо, санҷиши пардохт ва ҳолатҳо','Настройки магазина':'Танзимоти мағоза','Прайс, реквизиты и баннер':'Нархнома, реквизитҳо ва баннер'});
 Object.assign(tajik, {'Пользователи':'Корбарон','Telegram ID, имена и заказы':'Telegram ID, номҳо ва фармоишҳо','Всего пользователей':'Ҳамагӣ корбарон','Telegram ID, @username или имя':'Telegram ID, @username ё ном','Поиск пользователей':'Ҷустуҷӯи корбарон','Найти':'Ҷустуҷӯ','Показать ещё':'Бештар нишон додан','Пользователь Telegram':'Корбари Telegram','Открыть заказы':'Кушодани фармоишҳо','Пользователи не найдены.':'Корбарон ёфт нашуданд.'});
 Object.assign(tajik, {'Найдено':'Ёфт шуд','Как работает магазин':'Мағоза чӣ гуна кор мекунад','ВЫБЕРИ СЕРВИС':'ХИЗМАТРАСОНИРО ИНТИХОБ КУН','Избранное':'Дӯстдоштаҳо','Нажми на сердце на карточке, чтобы сохранить товар.':'Барои нигоҳ доштани маҳсулот дилчаро дар корт пахш кун.','ОФОРМЛЕНИЕ ЗАКАЗА':'САБТИ ФАРМОИШ','К каталогу':'Ба феҳрист','‹ На главную':'‹ Ба саҳифаи асосӣ'});
+Object.assign(tajik, {"Проверить заказ":"Санҷидани фармоиш","Код заказа":"Рамзи фармоиш","Введи код из сообщения бота или раздела «Заказы».":"Рамзро аз паёми бот ё бахши «Фармоишҳо» ворид кун.","Вставь полный код отправленного заказа.":"Рамзи пурраи фармоиши фиристодашударо ворид кун.","Заказ с таким кодом не найден в твоём аккаунте.":"Фармоиш бо ин рамз дар ҳисоби ту ёфт нашуд.","Почему выбирают SHAKHA DONAT":"Чаро SHAKHA DONAT-ро интихоб мекунанд","Игры и Telegram":"Бозиҳо ва Telegram","Пополнения, Stars и Premium в одном каталоге.":"Пуркунӣ, Stars ва Premium дар як феҳрист.","Оплата по заказу":"Пардохти фармоиш","Способ оплаты и сумма видны перед подтверждением.":"Тарзи пардохт ва маблағ пеш аз тасдиқ нишон дода мешаванд.","Цены в сомони":"Нархҳо бо сомонӣ","Если цена ещё не задана, её уточнит оператор.":"Агар нарх ҳанӯз муайян нашуда бошад, оператор онро муайян мекунад.","Поддержка":"Дастгирӣ","Напиши оператору из профиля, если нужна помощь.":"Агар кумак лозим бошад, аз профил ба оператор навис.","Статус уточняется":"Ҳолат муайян мешавад"});
 const originalText = new WeakMap();
 const originalAttrs = new WeakMap();
 const preferences = {language:'ru',theme:'dark'};
