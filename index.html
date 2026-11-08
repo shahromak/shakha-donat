@@ -1257,12 +1257,14 @@ async function checkTelegram() {
     $('#telegram-status').textContent = '✓ Аккаунт подтверждён через Telegram.';
     button.hidden = true;
     $('#owner-panel').hidden = !isAdmin;
-    if (isAdmin && location.hash === '#manage') openShopSettings();
-    if (isAdmin && location.hash === '#admin') $('#admin-orders').click();
-    if (isAdmin && location.hash === '#users') $('#owner-users').click();
-    if (location.hash === '#orders' && !$('#history').open) showHistory();
-    if (location.hash === '#support' && !$('#support-dialog').open) openSupport(false);
-    if (location.hash === '#language') $('#shop-settings-title').scrollIntoView({block:'start'});
+    if (loader.open) loader.close();
+    const section = currentSection();
+    if (isAdmin && section === '#manage') openShopSettings();
+    if (isAdmin && section === '#admin') $('#admin-orders').click();
+    if (isAdmin && section === '#users') $('#owner-users').click();
+    if (section === '#orders' && !$('#history').open) showHistory();
+    if (section === '#support' && !$('#support-dialog').open) openSupport(false);
+    if (section === '#language') $('#shop-settings-title').scrollIntoView({block:'start'});
   } catch (error) {
     $('#telegram-status').textContent = error.message;
     button.hidden = false;
@@ -1343,11 +1345,19 @@ $('#add-cart').onclick = () => {
   $('#open-cart').click();
 };
 renderCart();
+const launchSections = new Set(['catalog','orders','profile','support','language','admin','users','manage']);
+const requestedSection = new URLSearchParams(location.search).get('section');
+let launchSection = launchSections.has(requestedSection) ? '#' + requestedSection : '';
+function currentSection() {
+  if (launchSection) return launchSection;
+  return /^#[a-z-]+$/.test(location.hash) ? location.hash : '';
+}
 function showScreen() {
-  const profile = ['#profile','#admin','#manage','#users','#orders','#support','#language'].includes(location.hash);
-  const faq = location.hash === '#shop-faq';
+  const hash = currentSection();
+  const profile = ['#profile','#admin','#manage','#users','#orders','#support','#language'].includes(hash);
+  const faq = hash === '#shop-faq';
   for (const link of document.querySelectorAll('.store-nav a[href="#"],.store-nav a[href="#catalog"]')) {
-    const active = !profile && !faq && (link.getAttribute('href') === '#' ? !location.hash : link.hash === location.hash);
+    const active = !profile && !faq && (link.getAttribute('href') === '#' ? !hash : link.hash === hash);
     if (active) link.setAttribute('aria-current','page');
     else link.removeAttribute('aria-current');
   }
@@ -1360,11 +1370,20 @@ function showScreen() {
   } else {
     $('#nav-profile').removeAttribute('aria-current');
     if (faq) window.scrollTo(0, 0);
-    else if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    else if (hash) document.getElementById(hash.slice(1))?.scrollIntoView();
     else window.scrollTo(0, 0);
   }
 }
-window.addEventListener('hashchange', showScreen);
+window.addEventListener('hashchange', () => {
+  launchSection = '';
+  showScreen();
+});
+for (const home of document.querySelectorAll('a[href="#"]')) home.addEventListener('click', event => {
+  if (!launchSection) return;
+  event.preventDefault();
+  launchSection = '';
+  showScreen();
+});
 showScreen();
 $('#telegram-login').onclick = checkTelegram;
 document.addEventListener('DOMContentLoaded', () => {
