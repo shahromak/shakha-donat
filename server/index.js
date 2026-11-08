@@ -342,7 +342,7 @@ function decodeReceipt(value) {
   return null;
 }
 
-const webBanks = new Set(['alif','dc']);
+const webBanks = new Set(['alif','dc','other']);
 function webOrderAuth(req,res,next) {
   const match = /^Bearer ([0-9a-f]{64})$/.exec(req.get('Authorization') || '');
   if (!match) return res.status(401).json({error:'Ключ заказа отсутствует. Открой страницу в том же браузере.'});
