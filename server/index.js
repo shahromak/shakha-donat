@@ -12,7 +12,7 @@ const defaultJson = express.json({limit:'20kb'});
 const receiptJson = express.json({limit:'4.2mb'});
 const settingsJson = express.json({limit:'240kb'});
 app.use((req,res,next) => {
-  if (req.method === 'POST' && /^\/api\/orders\/[^/]+\/payment$/.test(req.path)) return receiptJson(req,res,next);
+  if (req.method === 'POST' && /^\/api\/(?:orders|web-orders)\/[^/]+\/payment$/.test(req.path)) return receiptJson(req,res,next);
   const parser = req.method === 'POST' && req.path === '/api/admin/settings' ? settingsJson : defaultJson;
   parser(req,res,next);
 });
@@ -341,7 +341,51 @@ function decodeReceipt(value) {
   if (content.subarray(0,3).toString('hex') === 'ffd8ff') return {content,mime:'image/jpeg'};
   return null;
 }
-app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
+
+const webBanks = new Set(['alif','dc']);
+function webOrderAuth(req,res,next) {
+  const match = /^Bearer ([0-9a-f]{64})$/.exec(req.get('Authorization') || '');
+  if (!match) return res.status(401).json({error:'Ключ заказа отсутствует. Открой страницу в том же браузере.'});
+  req.telegramUser = {id:'web:' + crypto.createHash('sha256').update(match[1]).digest('hex')};
+  next();
+}
+app.get('/api/web-catalog', orderRoute(async (_req,res) => {
+  const settings = await shopSettings();
+  res.json({prices:settings.prices, banks:[...webBanks].filter(bank => paymentInstructions(settings,bank))});
+}));
+app.post('/api/web-orders/:id', webOrderAuth, orderRoute(async (req,res) => {
+  const {product,pack,account,bank,priceMinor} = req.body || {};
+  const {id} = req.params;
+  const owner = req.telegramUser.id;
+  if (!uuid.test(id) || !products.get(product)?.includes(pack) || !webBanks.has(bank) ||
+      typeof account !== 'string' || !account.trim() || account.length > 80 || !Number.isInteger(priceMinor)) {
+    return res.status(400).json({error:'Проверь пакет, получателя, банк и сумму.'});
+  }
+  const existing = await database.query('SELECT id FROM storefront_orders WHERE id=$1 AND customer_id=$2', [id,owner]);
+  if (existing.rowCount) return res.json({id});
+  const settings = await shopSettings();
+  const price = settings.prices?.[product]?.[pack];
+  const details = paymentInstructions(settings,bank);
+  if (!Number.isInteger(price) || price < 1 || price !== priceMinor || !details) {
+    return res.status(409).json({error:'Цена или способ оплаты изменились. Обнови страницу.'});
+  }
+  const saved = await database.query(
+    "INSERT INTO storefront_orders (id,customer_id,product,package,account,payment_method,status,price_minor,payment_details_snapshot) VALUES ($1,$2,$3,$4,$5,$6,'awaiting_payment',$7,$8) ON CONFLICT (id) DO UPDATE SET id=EXCLUDED.id WHERE storefront_orders.customer_id=EXCLUDED.customer_id RETURNING id",
+    [id,owner,product,pack,account.trim(),bank,price,details]
+  );
+  if (!saved.rowCount) return res.status(409).json({error:'Код заказа уже используется.'});
+  res.json({id});
+}));
+app.get('/api/web-orders/:id', webOrderAuth, orderRoute(async (req,res) => {
+  if (!uuid.test(req.params.id)) return res.sendStatus(400);
+  const {rows:[order]} = await database.query(
+    "SELECT id,product,package,account,status,price_minor,payment_method,CASE WHEN status='awaiting_payment' THEN payment_details_snapshot END AS details FROM storefront_orders WHERE id=$1 AND customer_id=$2",
+    [req.params.id,req.telegramUser.id]
+  );
+  if (!order) return res.status(404).json({error:'Заказ не найден.'});
+  res.json({order});
+}));
+async function uploadOrderReceipt(req,res) {
   const receipt = decodeReceipt(req.body?.receipt);
   if (!uuid.test(req.params.id) || !receipt) return res.status(400).json({error:'Загрузи чек JPG, PNG или PDF до 3 МБ'});
   const decisionToken = crypto.randomUUID();
@@ -358,7 +402,9 @@ app.post('/api/orders/:id/payment', auth, orderRoute(async (req, res) => {
   if (!order) return res.status(409).json({error:'Заказ уже отправлен на проверку или способ оплаты изменился. Обнови историю.'});
   res.json({ok:true});
   if (BOT_TOKEN) void notifyReceipt(order, decisionToken).catch(() => console.warn('SHAKHA DONAT: receipt notification not delivered'));
-}));
+}
+app.post('/api/orders/:id/payment', auth, orderRoute(uploadOrderReceipt));
+app.post('/api/web-orders/:id/payment', webOrderAuth, orderRoute(uploadOrderReceipt));
 app.get('/api/admin/orders/:id/receipt', auth, adminOnly, orderRoute(async (req,res) => {
   if (!uuid.test(req.params.id)) return res.sendStatus(400);
   const {rows} = await database.query('SELECT mime,content FROM storefront_receipts WHERE order_id=$1', [req.params.id]);
@@ -371,7 +417,7 @@ app.get('/api/admin/users', auth, adminOnly, orderRoute(async (req, res) => {
   if (!Number.isSafeInteger(offset) || offset < 0) return res.sendStatus(400);
   const {rows:[result]} = await database.query(`
     WITH counts AS (
-      SELECT customer_id, count(*)::int AS order_count FROM storefront_orders GROUP BY customer_id
+      SELECT customer_id, count(*)::int AS order_count FROM storefront_orders WHERE customer_id NOT LIKE 'web:%' GROUP BY customer_id
     ), ids AS (
       SELECT telegram_id FROM storefront_users
       UNION SELECT customer_id FROM counts
@@ -393,7 +439,7 @@ app.get('/api/admin/users', auth, adminOnly, orderRoute(async (req, res) => {
 app.get('/api/admin/orders', auth, adminOnly, orderRoute(async (req, res) => {
   const customer = req.query.customer ?? null;
   if (customer !== null && (typeof customer !== 'string' || !/^\d{1,20}$/.test(customer))) return res.sendStatus(400);
-  const {rows} = await database.query('SELECT ' + fields + ', customer_id, EXISTS (SELECT 1 FROM storefront_receipts r WHERE r.order_id=storefront_orders.id) AS has_receipt FROM storefront_orders WHERE ($1::text IS NULL OR customer_id=$1) ORDER BY created_at DESC LIMIT 100', [customer]);
+  const {rows} = await database.query('SELECT ' + fields + ', CASE WHEN customer_id LIKE \'web:%\' THEN NULL ELSE customer_id END AS customer_id, EXISTS (SELECT 1 FROM storefront_receipts r WHERE r.order_id=storefront_orders.id) AS has_receipt FROM storefront_orders WHERE ($1::text IS NULL OR customer_id=$1) ORDER BY created_at DESC LIMIT 100', [customer]);
   res.json({orders:rows});
 }));
 app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) => {
