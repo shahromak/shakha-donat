@@ -327,11 +327,12 @@ app.post('/api/orders/quote', auth, orderRoute(async (req,res) => {
   res.json({priceMinor});
 }));
 app.post('/api/orders', auth, orderRoute(async (req, res) => {
-  const {id, product, pack, account, amount, paymentMethod = null, confirmedPriceMinor = null} = req.body || {};
+  const {id, product, pack, account, paymentMethod = null, confirmedPriceMinor = null} = req.body || {};
+  const amount = product === 'Steam' && typeof pack === 'string' ? Number.parseInt(pack,10) : null;
   if (typeof id !== 'string' || !uuid.test(id) || !products.get(product)?.includes(pack) ||
       (paymentMethod !== null && !paymentMethods.has(paymentMethod)) ||
       typeof account !== 'string' || !account.trim() || account.trim().length > 80 ||
-      (product === 'Steam' && (typeof amount !== 'number' || amount < 0.01 || amount > 100000))) {
+      (product === 'Steam' && (!Number.isInteger(amount) || amount < 1 || amount > 100000))) {
     return res.status(400).json({error:'Проверь товар, пакет, сумму и ID аккаунта'});
   }
   let priceMinor = null;
