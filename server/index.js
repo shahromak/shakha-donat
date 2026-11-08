@@ -138,7 +138,23 @@ function orderRoute(handler, fallback) {
         SELECT jsonb_object_agg(product, COALESCE(defaults.packs,'{}'::jsonb) || COALESCE(existing.packs,'{}'::jsonb))
         FROM jsonb_each('{"PUBG Mobile":{"60 UC":974,"325 UC":4914,"660 UC":9696,"1800 UC":24561},"Free Fire":{"100 алмазов":895,"310 алмазов":2700,"520 алмазов":4500},"Roblox":{"400 Robux":6150,"800 Robux":9705,"1700 Robux":20830},"Telegram Stars":{"50 Stars":915,"100 Stars":1640,"250 Stars":4100,"500 Stars":8200,"1000 Stars":16395,"2500 Stars":40985},"Telegram Premium":{"3 месяца":14300,"6 месяцев":19700,"12 месяцев":34700},"Steam":{"10 TJS":1000,"25 TJS":2500,"50 TJS":5000,"100 TJS":10000},"Mobile Legends":{"68 алмазов":1368,"135 алмазов":2728,"160 алмазов":3090,"225 алмазов":4679,"265 алмазов":5248,"275 алмазов":5478,"325 алмазов":6338,"390 алмазов":5961,"650 алмазов":12615,"970 алмазов":18544,"1290 алмазов":24722,"1775 алмазов":33332,"2600 алмазов":50454,"6400 алмазов":131132,"86 алмазов":1300,"172 алмаза":2550,"257 алмазов":3700},"Genshin Impact":{"60 кристаллов":1100,"330 кристаллов":5950,"Благословение Луны":5950}}'::jsonb) AS defaults(product,packs)
         FULL JOIN jsonb_each(COALESCE(data->'prices','{}'::jsonb)) AS existing(product,packs) USING (product)
-      )) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run)`)
+      )) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run);
+      WITH first_run AS (
+        INSERT INTO storefront_catalog_migrations(name) VALUES ('raise-prices-ten-percent-2026-11-08')
+        ON CONFLICT DO NOTHING RETURNING name
+      )
+      UPDATE storefront_settings SET data=data || (
+        SELECT jsonb_object_agg(currency, COALESCE((
+          SELECT jsonb_object_agg(product, COALESCE((
+            SELECT jsonb_object_agg(pack, CASE WHEN currency='starsPrices'
+              THEN ceil(price * 1.10) ELSE round(price * 1.10) END)
+            FROM jsonb_each(packs) AS package_prices(pack, price_json)
+            CROSS JOIN LATERAL (SELECT (price_json #>> '{}')::numeric AS price) AS parsed
+          ), '{}'::jsonb))
+          FROM jsonb_each(COALESCE(data->currency,'{}'::jsonb)) AS product_prices(product,packs)
+        ), '{}'::jsonb))
+        FROM (VALUES ('prices'), ('starsPrices')) AS currencies(currency)
+      ) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
