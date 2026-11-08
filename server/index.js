@@ -240,6 +240,15 @@ app.get('/api/orders', auth, orderRoute(async (req, res) => {
     ...order, paymentDetails:order.status === 'awaiting_payment' ? (payment_details_snapshot || paymentInstructions(settings, order.payment_method)) : ''
   }))});
 }));
+app.get('/api/orders/:id', auth, orderRoute(async (req, res) => {
+  if (!uuid.test(req.params.id)) return res.status(400).json({error:'Проверь код заказа.'});
+  const {rows:[order]} = await database.query(
+    'SELECT product, package, amount, status FROM storefront_orders WHERE id=$1 AND customer_id=$2',
+    [req.params.id, req.telegramUser.id]
+  );
+  if (!order) return res.status(404).json({error:'Заказ с таким кодом не найден в твоём аккаунте.'});
+  res.json({order});
+}));
 function checkoutPrice(settings, product, pack) {
   const price = settings.prices?.[product]?.[pack];
   return Number.isInteger(price) && price > 0 ? price : null;
@@ -434,7 +443,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=admin-users';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=order-status';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
