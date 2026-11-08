@@ -242,6 +242,10 @@ label.checkout-step input{grid-column:1/-1}
 @media(max-width:700px){.benefit-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.featured.featured-rail{grid-auto-columns:clamp(140px,43vw,225px)}}
 
 #checkout :is(#checkout-bot,#pay-stars)[hidden]{display:none!important}
+
+.checkout-alif:not([hidden]){display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;margin-top:9px;padding:10px 13px;border:1px solid #4a8c7c;border-radius:12px;background:#163b35;color:#dbf7ee}
+.checkout-alif span{font-size:.84rem;text-align:right}
+[data-shop-theme=light] .checkout-alif:not([hidden]){background:#e9f7f0;color:#174d41}
 </style>
 <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
 <link rel="stylesheet" href="catalog-covers.css?v=1">
@@ -312,7 +316,7 @@ label.checkout-step input{grid-column:1/-1}
 <a id="nav-profile" href="#profile"><svg class="ui-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></svg>Профиль</a>
 </nav>
 <footer>© 2026 SHAKHA DONAT · Независимый сервис</footer>
-<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ОФОРМЛЕНИЕ ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3 class="checkout-step"><i aria-hidden="true">1</i><span>Выбери пакет</span></h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><label class="checkout-step"><i aria-hidden="true">2</i><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><h3 class="checkout-step"><i aria-hidden="true">3</i><span>Оплата в Telegram Stars</span></h3><p class="note">На витрине цены в сомони. Сумма списания указана в Stars.</p><p id="checkout-availability" class="note" aria-live="polite"></p><a id="checkout-bot" href="https://t.me/ShakhaDonatBot" class="cta primary" hidden>Открыть в Telegram</a><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
+<dialog id="checkout"><button class="close" aria-label="Закрыть">×</button><div class="eyebrow">ОФОРМЛЕНИЕ ЗАКАЗА</div><h2 id="product"></h2><form id="form"><h3 class="checkout-step"><i aria-hidden="true">1</i><span>Выбери пакет</span></h3><select id="package" hidden aria-label="Пакет"></select><div id="pack-grid" class="pack-grid"></div><label class="checkout-step"><i aria-hidden="true">2</i><span id="accountTitle">ID или имя пользователя</span><input required id="account" maxlength="80" autocomplete="off"></label><h3 class="checkout-step"><i aria-hidden="true">3</i><span>Оплата в Telegram Stars</span></h3><p class="note">На витрине цены в сомони. Сумма списания указана в Stars.</p><p id="checkout-availability" class="note" aria-live="polite"></p><a id="checkout-bot" href="https://t.me/ShakhaDonatBot" class="cta primary" hidden>Открыть в Telegram</a><button id="pay-stars" class="stars-button" type="button">Оплатить в ⭐</button><a id="checkout-alif" class="checkout-alif" href="https://shahromak.github.io/shakha-donat/bank.html?v=bank-cards" target="_blank" rel="noopener noreferrer" hidden><strong>Алиф</strong><span>Открыть сайт в браузере ↗</span></a><div class="checkout-secondary"><button type="button" id="add-cart"><svg class="ui-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 5h2l2 10h12l2-7H6m3 11h.01m8 0h.01"/></svg>В корзину</button><button type="submit">Сохранить черновик</button></div><p id="result" class="note" role="status"></p></form></dialog>
 <dialog id="history"><button class="close" aria-label="Закрыть">×</button><h2>Мои заказы</h2><p class="note">Черновики хранятся в этом браузере.</p><h3>Отправленные заказы</h3><div id="server-orders" class="note" aria-live="polite"></div><h3>Черновики на устройстве</h3><div id="saved"></div></dialog>
 <dialog id="users-dialog"><button class="close" aria-label="Закрыть">×</button><h2>Пользователи</h2>
 <p><span>Всего пользователей</span> · <strong id="users-total">—</strong></p>
@@ -567,6 +571,7 @@ function renderPackages(product) {
     $('#pay-stars').textContent = stars ? 'Оплатить ' + stars + ' ⭐' : 'Оплатить';
     $('#pay-stars').hidden = !stars || !inTelegram;
     $('#checkout-bot').hidden = !stars || inTelegram;
+    $('#checkout-alif').hidden = !availablePayments?.includes('alif') || !managedPrices[product[0]]?.[select.value];
     $('#checkout-availability').textContent = stars ? (inTelegram ? '' : 'Для оплаты открой магазин через бота.') : 'Этот пакет пока недоступен к покупке.';
   }
   grid.replaceChildren(...product[5].map(pack => {
@@ -793,6 +798,11 @@ renderCatalog();
 
 const labels = {new:'Новая заявка', awaiting_payment:'Ожидает оплаты', review:'Проверяется', paid:'Оплата подтверждена', completed:'Выполнен', cancelled:'Отменён'};
 let telegram;
+$('#checkout-alif').onclick = event => {
+  if (typeof telegram?.openLink !== 'function' || !telegram.initData) return;
+  event.preventDefault();
+  telegram.openLink(event.currentTarget.href);
+};
 async function api(path, body) {
   if (!telegram?.initData) throw new Error('Открой магазин через Mini App в @ShakhaDonatBot.');
   let response;
@@ -1250,6 +1260,7 @@ Object.assign(tajik, {'Пользователи':'Корбарон','Telegram ID
 Object.assign(tajik, {'Найдено':'Ёфт шуд','Как работает магазин':'Мағоза чӣ гуна кор мекунад','ВЫБЕРИ СЕРВИС':'ХИЗМАТРАСОНИРО ИНТИХОБ КУН','Избранное':'Дӯстдоштаҳо','Нажми на сердце на карточке, чтобы сохранить товар.':'Барои нигоҳ доштани маҳсулот дилчаро дар корт пахш кун.','ОФОРМЛЕНИЕ ЗАКАЗА':'САБТИ ФАРМОИШ','К каталогу':'Ба феҳрист','‹ На главную':'‹ Ба саҳифаи асосӣ'});
 Object.assign(tajik, {"Проверить заказ":"Санҷидани фармоиш","Код заказа":"Рамзи фармоиш","Введи код из сообщения бота или раздела «Заказы».":"Рамзро аз паёми бот ё бахши «Фармоишҳо» ворид кун.","Вставь полный код отправленного заказа.":"Рамзи пурраи фармоиши фиристодашударо ворид кун.","Заказ с таким кодом не найден в твоём аккаунте.":"Фармоиш бо ин рамз дар ҳисоби ту ёфт нашуд.","Почему выбирают SHAKHA DONAT":"Чаро SHAKHA DONAT-ро интихоб мекунанд","Игры и Telegram":"Бозиҳо ва Telegram","Пополнения, Stars и Premium в одном каталоге.":"Пуркунӣ, Stars ва Premium дар як феҳрист.","Оплата по заказу":"Пардохти фармоиш","Способ оплаты и сумма видны перед подтверждением.":"Тарзи пардохт ва маблағ пеш аз тасдиқ нишон дода мешаванд.","Цены в сомони":"Нархҳо бо сомонӣ","Если цена ещё не задана, её уточнит оператор.":"Агар нарх ҳанӯз муайян нашуда бошад, оператор онро муайян мекунад.","Поддержка":"Дастгирӣ","Напиши оператору из профиля, если нужна помощь.":"Агар кумак лозим бошад, аз профил ба оператор навис.","Статус уточняется":"Ҳолат муайян мешавад"});
 Object.assign(tajik, {'Оплата в Telegram Stars':'Пардохт бо Telegram Stars','Этот пакет пока недоступен к покупке.':'Ин баста ҳоло барои харид дастрас нест.','Для оплаты открой магазин через бота.':'Барои пардохт мағозаро аз бот кушо.','Открыть товар':'Кушодани маҳсулот','Недоступно':'Ба наздикӣ','Цены в сомони':'Нархҳо бо сомонӣ','На витрине цены в сомони. Сумма списания указана в Stars.':'Нархҳо дар феҳрист бо сомонӣ ва маблағи пардохт бо Stars нишон дода мешаванд.','Для доступных пакетов цена указана в каталоге.':'Нархи бастаҳои дастрас дар феҳрист нишон дода мешавад.'});
+Object.assign(tajik, {'Открыть сайт в браузере ↗':'Кушодани сомона дар браузер ↗'});
 const originalText = new WeakMap();
 const originalAttrs = new WeakMap();
 const preferences = {language:'ru',theme:'dark'};
