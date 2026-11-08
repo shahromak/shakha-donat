@@ -1,0 +1,114 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer"><title>SHAKHA DONAT — Оплата в сомони</title>
+<style>
+:root{color-scheme:dark;font:16px system-ui;color:#eaf2ff;background:#101827}*{box-sizing:border-box}body{margin:0;padding:24px 14px}main{max-width:550px;margin:auto}section{background:#17263b;border:1px solid #3a4c68;border-radius:20px;padding:20px;margin:16px 0}h1{font-size:clamp(26px,7vw,38px);margin-bottom:5px}p{line-height:1.45;color:#b9c8dd}label{display:grid;gap:6px;margin:12px 0}input,select,button{width:100%;min-height:46px;border:1px solid #455873;border-radius:10px;background:#101827;color:inherit;font:inherit;padding:9px}button{background:#316cdb;color:white;font-weight:700;cursor:pointer}button:disabled{opacity:.55;cursor:default}button+button{margin-top:8px}strong{color:#a3c6ff}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#101827;padding:12px;border-radius:10px}#message{overflow-wrap:anywhere}small{color:#b9c8dd}
+</style></head><body><main><h1>SHAKHA DONAT</h1><p>Банковский перевод в сомони</p>
+<section id="checkout" hidden><form id="order-form" method="post"><label>Товар<select id="product" required></select></label><label>Пакет<select id="pack" required></select></label><label>Данные получателя<input id="account" placeholder="Игровой ID, логин Steam или @username" maxlength="80" required></label><label>Банк<select id="bank" required></select></label><p><strong id="price"></strong></p><button id="create">Показать реквизиты</button></form></section>
+<section id="order" hidden><h2>Заказ</h2><p id="summary"></p><p id="code"></p><p id="status"></p><div id="transfer" hidden><p>Переведи указанную сумму и загрузи чек. Оплату проверяет оператор.</p><pre id="details"></pre><form id="receipt" method="post"><label>Чек JPG, PNG или PDF, до 3 МБ<input id="file" type="file" accept="image/png,image/jpeg,application/pdf" required></label><button id="upload">Отправить чек</button></form></div><button id="refresh" type="button">Обновить статус</button><button id="finish" type="button" hidden>Новый заказ</button><p><small>Чтобы открыть этот заказ снова, используй тот же браузер.</small></p></section>
+<p id="message" role="status">Загружаем каталог…</p></main>
+<script>
+const $ = id => document.getElementById(id);
+const storageKey = 'shakha-bank-order-v1';
+const bankLabels = {alif:'Алиф',dc:'Душанбе Сити'};
+const statuses = {awaiting_payment:'Ожидает перевода или нового чека',review:'Чек проверяется',paid:'Оплата подтверждена',completed:'Заказ выполнен',cancelled:'Заказ отменён'};
+const money = minor => new Intl.NumberFormat('ru',{minimumFractionDigits:2,maximumFractionDigits:2}).format(minor / 100) + ' TJS';
+let catalog, active;
+async function request(path, body, order) {
+  const headers = order ? {Authorization:'Bearer ' + order.token} : {};
+  if (body) headers['Content-Type'] = 'application/json';
+  const response = await fetch('https://shakha-donat-api-v2.onrender.com/api' + path, {
+    method:body ? 'POST' : 'GET',headers,body:body ? JSON.stringify(body) : undefined,cache:'no-store',signal:AbortSignal.timeout(25000)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(data.error || 'Запрос не выполнен. Повтори попытку.');
+    error.status = response.status;
+    throw error;
+  }
+  return data;
+}
+function showPrice() {
+  const price = catalog.prices[$('product').value]?.[$('pack').value];
+  $('price').textContent = price ? 'К переводу ' + money(price) : '';
+}
+function showPacks() {
+  $('pack').replaceChildren(...Object.keys(catalog.prices[$('product').value] || {}).map(pack => new Option(pack)));
+  showPrice();
+}
+async function showCatalog() {
+  catalog = await request('/web-catalog');
+  const names = Object.keys(catalog.prices).filter(name => Object.keys(catalog.prices[name]).length);
+  $('product').replaceChildren(...names.map(name => new Option(name)));
+  $('bank').replaceChildren(...catalog.banks.map(bank => new Option(bankLabels[bank],bank)));
+  showPacks();
+  $('checkout').hidden = false;
+  $('create').disabled = !catalog.banks.length || !names.length;
+  $('message').textContent = catalog.banks.length ? '' : 'Банковская оплата пока недоступна.';
+}
+async function showOrder() {
+  const {order} = await request('/web-orders/' + active.id, undefined, active);
+  $('summary').textContent = [order.product,order.package,order.account,bankLabels[order.payment_method],money(order.price_minor)].join(' · ');
+  $('code').textContent = 'Код заказа ' + order.id;
+  $('status').textContent = statuses[order.status] || order.status;
+  $('details').textContent = order.details || '';
+  $('transfer').hidden = !order.details;
+  $('finish').hidden = !['completed','cancelled'].includes(order.status);
+  $('checkout').hidden = true;
+  $('order').hidden = false;
+  $('message').textContent = '';
+}
+$('product').onchange = showPacks;
+$('pack').onchange = showPrice;
+$('order-form').onsubmit = async event => {
+  event.preventDefault();
+  const product = $('product').value, pack = $('pack').value, bank = $('bank').value, account = $('account').value.trim();
+  if (!account || !catalog.banks.includes(bank)) return;
+  const priceMinor = catalog.prices[product]?.[pack];
+  $('create').disabled = true;
+  $('message').textContent = 'Создаём заказ…';
+  try {
+    if (!active) {
+      const token = Array.from(crypto.getRandomValues(new Uint8Array(32)), byte => byte.toString(16).padStart(2,'0')).join('');
+      const next = {id:crypto.randomUUID(), token};
+      localStorage.setItem(storageKey,JSON.stringify(next));
+      active = next;
+    }
+    await request('/web-orders/' + active.id,{product,pack,bank,account,priceMinor},active);
+    await showOrder();
+  } catch(error) { $('message').textContent = error.message; }
+  finally { $('create').disabled = false; }
+};
+$('receipt').onsubmit = async event => {
+  event.preventDefault();
+  const file = $('file').files[0];
+  if (!file || file.size > 3 * 1024 * 1024) { $('message').textContent = 'Выбери чек до 3 МБ.'; return; }
+  $('upload').disabled = true;
+  $('message').textContent = 'Отправляем чек…';
+  try {
+    const receipt = await new Promise((resolve,reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Не удалось прочитать файл.'));
+      reader.readAsDataURL(file);
+    });
+    const {order} = await request('/web-orders/' + active.id,undefined,active);
+    await request('/web-orders/' + active.id + '/payment',{receipt,paymentMethod:order.payment_method},active);
+    $('receipt').reset();
+    await showOrder();
+  } catch(error) { $('message').textContent = error.message; }
+  finally { $('upload').disabled = false; }
+};
+$('refresh').onclick = () => showOrder().catch(error => { $('message').textContent = error.message; });
+$('finish').onclick = () => {
+  localStorage.removeItem(storageKey);
+  location.reload();
+};
+(async () => {
+  try {
+    active = JSON.parse(localStorage.getItem(storageKey) || 'null');
+    if (active) {
+      try { await showOrder(); return; } catch(error) { if (error.status !== 404) { $('order').hidden = false; throw error; } }
+    }
+    await showCatalog();
+  } catch(error) { $('message').textContent = error.message; }
+})();
+</script></body></html>
