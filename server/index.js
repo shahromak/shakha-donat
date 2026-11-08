@@ -74,9 +74,7 @@ const products = new Map(Object.entries({
     "6 месяцев",
     "12 месяцев"
   ],
-  "Steam": [
-    "Указать сумму"
-  ],
+  "Steam": ["10 TJS","25 TJS","50 TJS","100 TJS"],
   "Mobile Legends": ["68 алмазов","135 алмазов","160 алмазов","225 алмазов","265 алмазов","275 алмазов","325 алмазов","390 алмазов","650 алмазов","970 алмазов","1290 алмазов","1775 алмазов","2600 алмазов","6400 алмазов","86 алмазов","172 алмаза","257 алмазов"],
   "Genshin Impact": [
     "60 кристаллов",
@@ -122,7 +120,17 @@ function orderRoute(handler, fallback) {
         SELECT 1, '{"prices":{"Mobile Legends":{"68 алмазов":1368,"135 алмазов":2728,"160 алмазов":3090,"225 алмазов":4679,"265 алмазов":5248,"275 алмазов":5478,"325 алмазов":6338,"390 алмазов":5961,"650 алмазов":12615,"970 алмазов":18544,"1290 алмазов":24722,"1775 алмазов":33332,"2600 алмазов":50454,"6400 алмазов":131132}},"payments":{},"banner":""}'::jsonb FROM first_run
       ON CONFLICT (id) DO UPDATE SET data=jsonb_set(storefront_settings.data,'{prices}',
         COALESCE(storefront_settings.data->'prices','{}'::jsonb) || jsonb_build_object('Mobile Legends',
-          COALESCE(storefront_settings.data->'prices'->'Mobile Legends','{}'::jsonb) || (EXCLUDED.data->'prices'->'Mobile Legends')))`)
+          COALESCE(storefront_settings.data->'prices'->'Mobile Legends','{}'::jsonb) || (EXCLUDED.data->'prices'->'Mobile Legends')));
+      WITH first_run AS (
+        INSERT INTO storefront_catalog_migrations(name) VALUES ('market-stars-2026-11-08') ON CONFLICT DO NOTHING RETURNING name
+      )
+      UPDATE storefront_settings SET data=jsonb_set(data,'{starsPrices}',(
+        SELECT jsonb_object_agg(product, COALESCE(defaults.packs,'{}'::jsonb) ||
+          CASE WHEN product='PUBG Mobile' AND existing.packs='{"60 UC":60,"325 UC":325,"660 UC":660,"1800 UC":1800}'::jsonb
+            THEN '{}'::jsonb ELSE COALESCE(existing.packs,'{}'::jsonb) END)
+        FROM jsonb_each('{"PUBG Mobile":{"60 UC":60,"325 UC":300,"660 UC":595,"1800 UC":1500},"Free Fire":{"100 алмазов":55,"310 алмазов":165,"520 алмазов":275},"Roblox":{"400 Robux":375,"800 Robux":595,"1700 Robux":1275},"Telegram Stars":{"50 Stars":80,"100 Stars":140,"250 Stars":345,"500 Stars":690,"1000 Stars":1370,"2500 Stars":3425},"Telegram Premium":{"3 месяца":875,"6 месяцев":1205,"12 месяцев":2120},"Steam":{"10 TJS":85,"25 TJS":210,"50 TJS":420,"100 TJS":840},"Mobile Legends":{"68 алмазов":85,"135 алмазов":170,"160 алмазов":190,"225 алмазов":290,"265 алмазов":320,"275 алмазов":335,"325 алмазов":390,"390 алмазов":365,"650 алмазов":770,"970 алмазов":1135,"1290 алмазов":1510,"1775 алмазов":2035,"2600 алмазов":3080,"6400 алмазов":8000,"86 алмазов":80,"172 алмаза":160,"257 алмазов":230},"Genshin Impact":{"60 кристаллов":70,"330 кристаллов":365,"Благословение Луны":365}}'::jsonb) AS defaults(product,packs)
+        FULL JOIN jsonb_each(COALESCE(data->'starsPrices','{}'::jsonb)) AS existing(product,packs) USING (product)
+      )) WHERE id=1 AND EXISTS (SELECT 1 FROM first_run)`)
         .catch(error => { schema = undefined; throw error; });
       await schema;
       await handler(req, res);
@@ -222,7 +230,7 @@ app.post('/api/admin/settings', auth, adminOnly, orderRoute(async (req, res) => 
     paymentMethods.has(method) && typeof value === 'string' && value.length <= 1200);
   const stars = starsPrices ?? (await shopSettings()).starsPrices ?? {};
   const validStars = record(stars) && Object.entries(stars).every(([product,packs]) =>
-    products.has(product) && product !== 'Steam' && record(packs) && Object.entries(packs).every(([pack, amount]) =>
+    products.has(product) && record(packs) && Object.entries(packs).every(([pack, amount]) =>
       products.get(product).includes(pack) && Number.isInteger(amount) && amount >= 1 && amount <= 10000));
   if (!validStars || !validPrices || !validPayments || !validImage || typeof banner !== 'string' || banner.length > 300) {
     return res.status(400).json({error:'Проверь цены, реквизиты и текст баннера'});
@@ -390,7 +398,7 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=launch-stars';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=market-stars';
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
