@@ -535,7 +535,12 @@ app.post('/api/admin/orders/:id', auth, adminOnly, orderRoute(async (req, res) =
 app.use('/api',(_req,res)=>res.status(501).json({error:'Orders, payments and OTP are not enabled yet'}));
 
 const botOrigin = 'https://shakha-donat-api-v2.onrender.com';
-const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=bot-menu';
+const shopUrl = 'https://shahromak.github.io/shakha-donat/?v=menu-routes';
+function shopSectionUrl(section) {
+  const url = new URL(shopUrl);
+  if (section) url.searchParams.set('section',section);
+  return url.href;
+}
 const webhookPath = '/telegram/webhook';
 const webhookSecret = BOT_TOKEN
   ? crypto.createHmac('sha256', BOT_TOKEN).update('shakha-donat-webhook-v1').digest('hex')
@@ -563,7 +568,7 @@ async function notifyReceipt(order, decisionToken) {
       'Получатель: ' + order.account, 'Сумма: ' + (order.price_minor / 100).toFixed(2) + ' TJS'
     ].join('\n'),
     reply_markup:{inline_keyboard:[
-      [{text:'Открыть чек в админке',web_app:{url:shopUrl + '#admin'}}],
+      [{text:'Открыть чек в админке',web_app:{url:shopSectionUrl('admin')}}],
       [{text:'Подтвердить',callback_data:'pay:yes:' + decisionToken},{text:'Отклонить',callback_data:'pay:no:' + decisionToken}]
     ]}
   });
@@ -582,7 +587,7 @@ async function handleReceiptDecision(query) {
   await telegramCall('answerCallbackQuery', {callback_query_id:query.id,text:rowCount ? (approved ? 'Оплата подтверждена' : 'Чек отклонён. Можно загрузить новый.') : 'Заказ уже обработан'});
   if (rowCount && query.message) await telegramCall('editMessageReplyMarkup', {
     chat_id:query.message.chat.id,message_id:query.message.message_id,
-    reply_markup:{inline_keyboard:[[{text:'Открыть заказ',web_app:{url:shopUrl + '#admin'}}]]}
+    reply_markup:{inline_keyboard:[[{text:'Открыть заказ',web_app:{url:shopSectionUrl('admin')}}]]}
   }).catch(() => {});
 }
 function starsOrderId(payload) {
@@ -636,15 +641,15 @@ app.post(webhookPath, async (req, res) => {
   if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
   const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
   const isAdmin = String(message.from?.id) === ADMIN_ID;
-  const link = (text, hash = '') => ({text,web_app:{url:shopUrl + hash}});
+  const link = (text, section) => ({text,web_app:{url:shopSectionUrl(section)}});
   const buttons = [
-    [link('🎮 Каталог пополнений','#catalog')],
-    [link('📦 Мои заказы','#orders'),link('👤 Профиль','#profile')],
-    [link('💬 Поддержка','#support'),link('🌐 Язык','#language')]
+    [link('🎮 Каталог пополнений','catalog')],
+    [link('📦 Мои заказы','orders'),link('👤 Профиль','profile')],
+    [link('💬 Поддержка','support'),link('🌐 Язык','language')]
   ];
   if (isAdmin) {
-    buttons.push([link('Панель администратора','#admin'),link('Пользователи','#users')]);
-    buttons.push([link('Настройки магазина','#manage')]);
+    buttons.push([link('Панель администратора','admin'),link('Пользователи','users')]);
+    buttons.push([link('Настройки магазина','manage')]);
   }
   const welcome = !['/admin','/orders','/help','/paysupport'].includes(command);
   const firstName = typeof message.from?.first_name === 'string' ? message.from.first_name.trim().slice(0,60) : '';
