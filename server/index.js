@@ -110,6 +110,7 @@ function orderRoute(handler, fallback) {
         id bigserial PRIMARY KEY, customer_id text NOT NULL, sender text NOT NULL,
         body text NOT NULL, created_at timestamptz NOT NULL DEFAULT now()
       ); CREATE INDEX IF NOT EXISTS storefront_support_customer_id ON storefront_support (customer_id,id);
+      ALTER TABLE storefront_support ADD COLUMN IF NOT EXISTS telegram_reply_key text UNIQUE;
       CREATE TABLE IF NOT EXISTS storefront_users (
         telegram_id text PRIMARY KEY, first_name text NOT NULL, username text NOT NULL,
         last_seen timestamptz NOT NULL DEFAULT now()
@@ -205,6 +206,7 @@ app.post('/api/support', auth, orderRoute(async (req, res) => {
   if (!message || message.length > 1500) return res.status(400).json({error:'Введи сообщение до 1500 символов'});
   const customer = req.telegramUser.id;
   const client = await database.connect();
+  let supportId;
   try {
     await client.query('BEGIN');
     await client.query('SELECT pg_advisory_xact_lock(hashtext($1)::bigint)', ['support:' + customer]);
@@ -212,7 +214,8 @@ app.post('/api/support', auth, orderRoute(async (req, res) => {
     const {rows} = await client.query(
       "SELECT sender FROM storefront_support WHERE customer_id=$1 AND sender IN ('operator','auto') ORDER BY id DESC LIMIT 1", [customer]
     );
-    await client.query("INSERT INTO storefront_support (customer_id,sender,body) VALUES ($1,'customer',$2)", [customer,message]);
+    const saved = await client.query("INSERT INTO storefront_support (customer_id,sender,body) VALUES ($1,'customer',$2) RETURNING id", [customer,message]);
+    supportId = saved.rows[0].id;
     if (!online && rows[0]?.sender !== 'auto') {
       await client.query("INSERT INTO storefront_support (customer_id,sender,body) VALUES ($1,'auto',$2)", [customer,supportOfflineReply]);
     }
@@ -222,6 +225,7 @@ app.post('/api/support', auth, orderRoute(async (req, res) => {
     await client.query('ROLLBACK').catch(() => {});
     throw error;
   } finally {client.release();}
+  if (BOT_TOKEN) void notifySupport(supportId, req.telegramUser, message).catch(() => console.warn('SHAKHA DONAT: support notification not delivered'));
 }));
 app.get('/api/admin/support', auth, adminOnly, orderRoute(async (_req, res) => {
   await database.query('INSERT INTO storefront_operator_presence (id,seen_at) VALUES (1,now()) ON CONFLICT (id) DO UPDATE SET seen_at=now()');
@@ -238,9 +242,7 @@ app.post('/api/admin/support/:customer', auth, adminOnly, orderRoute(async (req,
   const message = supportBody(req);
   const customer = req.params.customer;
   if (!/^\d{1,20}$/.test(customer) || !message || message.length > 1500) return res.status(400).json({error:'Проверь сообщение'});
-  const result = await database.query(`INSERT INTO storefront_support (customer_id,sender,body)
-    SELECT $1,'operator',$2 WHERE EXISTS (SELECT 1 FROM storefront_support WHERE customer_id=$1 AND sender='customer')`, [customer,message]);
-  if (!result.rowCount) return res.sendStatus(404);
+  if (!await saveSupportReply(customer,message)) return res.sendStatus(404);
   res.status(201).json({ok:true});
 }));
 app.get('/api/shop/settings', orderRoute(async (_req, res) => {
@@ -559,6 +561,56 @@ async function telegramCall(method, body = {}) {
   return result.result;
 }
 
+async function saveSupportReply(customer, message, telegramReplyKey = null) {
+  const result = await database.query(`INSERT INTO storefront_support (customer_id,sender,body,telegram_reply_key)
+    SELECT $1,'operator',$2,$3 WHERE EXISTS (SELECT 1 FROM storefront_support WHERE customer_id=$1 AND sender='customer')
+    ON CONFLICT (telegram_reply_key) DO NOTHING`, [customer,message,telegramReplyKey]);
+  return result.rowCount > 0;
+}
+async function notifySupport(id, user, message) {
+  const name = user.username ? '@' + user.username : user.first_name || 'Клиент';
+  await telegramCall('sendMessage', {
+    chat_id:ADMIN_ID,
+    text:'💬 Новое сообщение в поддержку\nОт: ' + name + '\n\n' + message,
+    reply_markup:{inline_keyboard:[[{text:'Ответить',callback_data:'support:reply:' + id}]]}
+  });
+}
+async function promptSupportReply(query) {
+  const id = /^support:reply:(\d{1,19})$/.exec(query.data)?.[1];
+  const allowed = id && String(query.from?.id) === ADMIN_ID &&
+    query.message?.chat?.type === 'private' && String(query.message.chat.id) === ADMIN_ID;
+  if (!allowed) {
+    await telegramCall('answerCallbackQuery',{callback_query_id:query.id,text:'Нет доступа'});
+    return;
+  }
+  await telegramCall('answerCallbackQuery',{callback_query_id:query.id});
+  await telegramCall('sendMessage',{
+    chat_id:ADMIN_ID,
+    text:'✍️ Напиши ответ клиенту на это сообщение.\nОбращение №' + id,
+    reply_markup:{force_reply:true,input_field_placeholder:'Ответ клиенту'}
+  });
+}
+async function handleSupportReply(message) {
+  const prompt = message.reply_to_message;
+  if (String(message.from?.id) !== ADMIN_ID || String(message.chat.id) !== ADMIN_ID ||
+      String(prompt?.from?.id) !== BOT_TOKEN.split(':')[0]) return false;
+  const id = /^✍️ Напиши ответ клиенту на это сообщение\.\nОбращение №(\d{1,19})$/.exec(prompt.text || '')?.[1];
+  if (!id) return false;
+  const reply = message.text.trim();
+  let status = 'Напиши ответ текстом до 1500 символов, ответив на запрос бота.';
+  if (reply && reply.length <= 1500) {
+    if (!database) throw Error('Support storage unavailable');
+    const {rows:[thread]} = await database.query("SELECT customer_id FROM storefront_support WHERE id::text=$1 AND sender='customer'",[id]);
+    if (thread) {
+      const saved = await saveSupportReply(thread.customer_id,reply,message.chat.id + ':' + message.message_id);
+      if (!saved) return true;
+      status = '✅ Ответ отправлен в чат поддержки клиента.';
+    } else status = 'Обращение не найдено.';
+  }
+  await telegramCall('sendMessage',{chat_id:ADMIN_ID,text:status}).catch(() => {});
+  return true;
+}
+
 async function notifyReceipt(order, decisionToken) {
   await telegramCall('sendMessage', {
     chat_id:ADMIN_ID,
@@ -633,12 +685,21 @@ app.post(webhookPath, async (req, res) => {
     }
   }
   if (req.body?.callback_query) {
-    try { await handleReceiptDecision(req.body.callback_query); }
-    catch { console.warn('SHAKHA DONAT: receipt decision failed'); }
+    const query = req.body.callback_query;
+    try {
+      if (query.data?.startsWith('support:reply:')) await promptSupportReply(query);
+      else await handleReceiptDecision(query);
+    } catch { console.warn('SHAKHA DONAT: callback failed'); }
     return res.sendStatus(200);
   }
   const message = req.body?.message;
   if (message?.chat?.type !== 'private' || typeof message.text !== 'string') return res.sendStatus(200);
+  try {
+    if (await handleSupportReply(message)) return res.sendStatus(200);
+  } catch {
+    console.warn('SHAKHA DONAT: could not save support reply');
+    return res.sendStatus(503);
+  }
   const command = message.text.trim().split(/\s+/)[0].toLowerCase().split('@')[0];
   const isAdmin = String(message.from?.id) === ADMIN_ID;
   const link = (text, section) => ({text,web_app:{url:shopSectionUrl(section)}});
